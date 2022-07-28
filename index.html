@@ -1,0 +1,133 @@
+<!-- <!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Canvas tutorial</title>
+  <script>
+    function draw() {
+      const canvas = document.getElementById('tutorial');
+      if (canvas.getContext) {
+        const ctx = canvas.getContext('2d');
+
+        ctx.strokeRect(10, 10, 100, 32);
+
+        ctx.font = '14px serif';
+
+        // ctx.beginPath();
+
+        const columns = ['работа', 'работа', 'работа', 'работа', 'работа'];
+
+        ctx.beginPath();
+        ctx.moveTo(0, 32);
+        ctx.lineTo(canvas.clientWidth, 32);
+        ctx.closePath();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, 64);
+        ctx.lineTo(canvas.clientWidth, 64);
+        ctx.closePath();
+        ctx.stroke();
+
+
+
+        columns.forEach((column, i) => {
+          ctx.beginPath();
+          ctx.moveTo(i * 100, 32);
+          ctx.lineTo(i * 100, 64);
+          ctx.fillText(column, i * 100 + 10, 50);
+
+          ctx.closePath();
+          ctx.stroke();
+        })
+
+
+
+      }
+    }
+  </script>
+  <style>
+    canvas {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+
+<body onload="draw();">
+  <canvas id="tutorial" width="600" height="600"></canvas>
+</body>
+
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script src="https://unpkg.com/konva@8.3.5/konva.min.js"></script>
+  <meta charset="utf-8" />
+  <title>Canvas Keyboard events Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container"></div>
+  <script>
+    var stage = new Konva.Stage({
+      container: 'container',
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+
+    var layer = new Konva.Layer();
+    stage.add(layer);
+
+    var circle = new Konva.Circle({
+      x: stage.width() / 2,
+      y: stage.height() / 2 + 10,
+      radius: 70,
+      fill: 'red',
+      stroke: 'black',
+      strokeWidth: 4,
+    });
+
+    layer.add(circle);
+
+    var container = stage.container();
+
+    // make it focusable
+
+    container.tabIndex = 1;
+    // focus it
+    // also stage will be in focus on its click
+    container.focus();
+
+    const DELTA = 100;
+
+    container.addEventListener('keydown', function (e) {
+      if (e.keyCode === 37) {
+        circle.x(circle.x() - DELTA);
+      } else if (e.keyCode === 38) {
+        circle.y(circle.y() - DELTA);
+      } else if (e.keyCode === 39) {
+        circle.x(circle.x() + DELTA);
+      } else if (e.keyCode === 40) {
+        circle.y(circle.y() + DELTA);
+      } else {
+        return;
+      }
+      e.preventDefault();
+    });
+  </script>
+</body>
+
+</html>
