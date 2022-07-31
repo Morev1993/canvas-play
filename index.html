@@ -1,66 +1,274 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 
 <head>
   <meta charset="utf-8" />
   <title>Canvas tutorial</title>
-  <script>
-    function draw() {
-      const canvas = document.getElementById('tutorial');
-      if (canvas.getContext) {
-        const ctx = canvas.getContext('2d');
 
-        ctx.strokeRect(10, 10, 100, 32);
-
-        ctx.font = '14px serif';
-
-        // ctx.beginPath();
-
-        const columns = ['работа', 'работа', 'работа', 'работа', 'работа'];
-
-        ctx.beginPath();
-        ctx.moveTo(0, 32);
-        ctx.lineTo(canvas.clientWidth, 32);
-        ctx.closePath();
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(0, 64);
-        ctx.lineTo(canvas.clientWidth, 64);
-        ctx.closePath();
-        ctx.stroke();
-
-
-
-        columns.forEach((column, i) => {
-          ctx.beginPath();
-          ctx.moveTo(i * 100, 32);
-          ctx.lineTo(i * 100, 64);
-          ctx.fillText(column, i * 100 + 10, 50);
-
-          ctx.closePath();
-          ctx.stroke();
-        })
-
-
-
-      }
-    }
-  </script>
   <style>
-    canvas {
-      border: 1px solid black;
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    input {
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-size: 14px;
+      overflow: hidden;
+    }
+
+    #scroll-container {
+      overflow: auto;
+      width: calc(100%);
+      height: calc(100vh);
     }
   </style>
 </head>
 
-<body onload="draw();">
-  <canvas id="tutorial" width="600" height="600"></canvas>
+<body>
+  <div id="scroll-container">
+    <div class="container">
+      <canvas id="canvas" width="600" height="600"></canvas>
+    </div>
+  </div>
 </body>
 
-</html> -->
+<script>
+  (() => {
+    document.body.onload = () => {
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      ctx.globalAlpha = 0.5;
+
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const cfg = {
+        cellWidth: 120,
+        cellHeight: 30,
+      };
 
 
+      const columns = 5;
+      const rows = 10;
+      const grid = generateGrid(columns, rows);
+
+      const cells = [];
+      let mouseX;
+      let mouseY;
+      let mouseType;
+
+
+
+      function generateGrid(columns, rows) {
+        return [...Array(rows).keys()].map(() => [...Array(columns).keys()].map((x) => x++));
+      }
+
+
+      function setSize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+
+      function generateCells() {
+        for (let rowIndex = 0; rowIndex < grid.length; rowIndex++) {
+          for (let colIndex = 0; colIndex < grid[rowIndex].length; colIndex++) {
+            cells.push(new Cell(colIndex * cfg.cellWidth, rowIndex * cfg.cellHeight, cfg.cellWidth, cfg.cellHeight, `${colIndex}-${rowIndex}`, '#1C3879'));
+          }
+        }
+      }
+
+      function scaleByDpi() {
+        // Get the DPR and size of the canvas
+        const dpr = window.devicePixelRatio;
+        const rect = canvas.getBoundingClientRect();
+
+        // Set the "actual" size of the canvas
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+
+        // Scale the context to ensure correct drawing operations
+        ctx.scale(dpr, dpr);
+
+        // Set the "drawn" size of the canvas
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+      }
+
+      function drawRect(x, y, width, height, color) {
+        ctx.clearRect(x, y, width, height);
+        ctx.strokeStyle = color;
+        ctx.strokeRect(x, y, width, height);
+      }
+
+      function drawFillRect(x, y, width, height, color) {
+        ctx.clearRect(x, y, width, height);
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, width, height);
+      }
+
+
+      function drawRectByPath(x, y, width, height, color) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(width, y);
+        ctx.lineTo(width, height);
+        ctx.lineTo(x, height);
+
+        ctx.closePath();
+        ctx.strokeStyle = color;
+        ctx.stroke();
+      }
+
+      function clearRect(x, y, width, height) {
+        ctx.clearRect(x, y, width, height);
+      }
+
+      function drawText(text, x, y, color) {
+        ctx.fillStyle = color;
+        ctx.font = '14px serif';
+
+        const textWidth = ctx.measureText(text);
+
+        ctx.fillText(text, x, y);
+      }
+
+      function addInput(x, y) {
+        var input = document.createElement('input');
+
+        input.type = 'text';
+        input.style.position = 'fixed';
+        input.style.left = `${x}px`;
+        input.style.top = `${y}px`;
+        input.style.height = `${cfg.cellHeight}px`;
+        input.style.width = `${cfg.cellWidth}px`;
+
+        document.body.appendChild(input);
+      }
+
+      function moveInput(x, y) {
+        var input = document.querySelector('input');
+
+        input.style.left = `${x}px`;
+        input.style.top = `${y}px`;
+
+        input.focus();
+
+        return input;
+      }
+
+      class Loop {
+        update() {
+          for (let i = 0; i < cells.length; i++) {
+            const cell = cells[i];
+            ctx.fillStyle = 'white';
+            // ctx.fill();
+
+            drawRect(cell.x, cell.y, cell.width, cell.height, cell.backgroundColor);
+            drawText(cell.text, cell.x + 4, cell.y + cell.height / 2, 'black');
+
+            if (cell.x < mouseX && cell.y < mouseY && (cell.x + cell.width > mouseX) && (cell.y + cell.height > mouseY)) {
+              drawFillRect(cell.x, cell.y, cell.width, cell.height, '#607EAA');
+              drawText(cell.text, cell.x + 4, cell.y + cell.height / 2, 'white');
+              if (mouseType === 'click') {
+                const input = moveInput(cell.x, cell.y);
+                input.value = cell.text;
+                input.onkeydown = (e) => {
+                  setTimeout(() => {
+                    cell.text = e.target.value;
+
+                  }, 0);
+                }
+              }
+            }
+
+
+          }
+
+          window.requestAnimationFrame(() => {
+            this.update();
+          });
+        }
+      }
+
+
+      class Cell {
+        x;
+        y;
+        width;
+        height;
+        borderColor;
+        colIndex;
+        rowIndex;
+        backgroundColor;
+        text;
+
+        constructor(x, y, width, height, text, backgroundColor) {
+          this.x = x;
+          this.y = y;
+          this.width = width;
+          this.height = height;
+          this.text = text;
+          this.backgroundColor = backgroundColor;
+        }
+      }
+
+      setSize();
+      generateCells();
+      scaleByDpi();
+      addInput(-1000, -1000);
+
+
+      addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = e.x - rect.x;
+        mouseY = e.y - rect.y;
+
+        mouseType = e.type;
+      });
+
+      addEventListener('click', (e) => {
+        mouseType = e.type;
+      });
+
+
+      // const scrollContainer = document.getElementById('scroll-container');
+
+      // const container = document.querySelector('.container');
+
+
+      // container.style.height = `${cfg.cellHeight * rows}px`;
+      // container.style.width = `${cfg.cellWidth * columns}px`;
+
+      // function repositionStage() {
+      //   let dx = scrollContainer.scrollLeft;
+      //   let dy = scrollContainer.scrollTop;
+
+      //   canvas.style.transform =
+      //     'translate(' + -dx + 'px, ' + -dy + 'px)';
+
+      // }
+
+
+      // scrollContainer.addEventListener('scroll', (e) => {
+      //   repositionStage();
+      // });
+
+      // repositionStage();
+
+      new Loop().update();
+    }
+  })();
+
+</script>
+
+</html>
+
+<!-- 
 
 <!DOCTYPE html>
 <html>
@@ -130,4 +338,4 @@
   </script>
 </body>
 
-</html>
+</html> -->
