@@ -3,13 +3,20 @@ export class Loop {
     this.update = update;
     this.render = render;
 
-    requestAnimationFrame(() => this.animate());
-  }
-  animate() {
-    requestAnimationFrame(() => this.animate());
+    this.deltaTime = 0;
 
-    this.update();
+    requestAnimationFrame((stampTime) => this.animate(stampTime));
+  }
+  animate(currentTime) {
+    requestAnimationFrame((stampTime) => this.animate(stampTime));
+
+    this.deltaTime = currentTime - this.lastUpdate;
+
+
+    this.update(this.deltaTime / 1000);
     this.render();
+
+    this.lastUpdate = currentTime;
 
   }
 }

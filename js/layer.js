@@ -5,15 +5,27 @@ export class Layer {
     container.appendChild(this.canvas);
 
     this.fitToContainer = this.fitToContainer.bind(this);
-    addEventListener('resize', this.fitToContainer);
+    // addEventListener('resize', this.fitToContainer);
     this.fitToContainer();
   }
 
   fitToContainer() {
     const dpr = window.devicePixelRatio;
 
-    this.w = this.canvas.width = this.canvas.clientWidth;
-    this.h = this.canvas.height = this.canvas.clientHeight;
+    const rect = this.canvas.getBoundingClientRect()
+
+    //   // Set the "actual" size of the canvas
+    this.canvas.width = rect.width * dpr;
+    this.canvas.height = rect.height * dpr;
+
+    // Scale the context to ensure correct drawing operations
+    this.context.scale(dpr, dpr);
+
+    this.w = this.canvas.width;
+    this.h = this.canvas.height;
+
+    this.canvas.style.width = `${rect.width}px`;
+    this.canvas.style.height = `${rect.height}px`;
 
   }
 }
