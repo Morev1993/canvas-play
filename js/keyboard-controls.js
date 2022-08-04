@@ -3,9 +3,8 @@ export class KeyboardControls {
     this.keyList = keyList;
     this.keys = {};
 
-    addEventListener('keydown', (e) => this.changeState(e));
-    addEventListener('keyup', (e) => this.changeState(e));
-
+    addEventListener("keydown", (e) => this.changeState(e));
+    addEventListener("keyup", (e) => this.changeState(e));
   }
 
   changeState(e) {
@@ -13,6 +12,6 @@ export class KeyboardControls {
       return;
     }
 
-    this.keys[e.code] = e.type === 'keydown' ? true : false;
+    this.keys[e.code] = e.type === "keydown" ? true : false;
   }
 }

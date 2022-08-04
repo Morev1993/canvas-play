@@ -3,14 +3,15 @@ import { Loop } from "./loop.js";
 import { Cell } from "./cell.js";
 import { KeyboardControls } from "./keyboard-controls.js";
 
-
 const cfg = {
   cellWidth: 120,
   cellHeight: 30,
 };
 
 function generateGrid(columns, rows) {
-  return [...Array(rows).keys()].map(() => [...Array(columns).keys()].map((x) => x++));
+  return [...Array(rows).keys()].map(() =>
+    [...Array(columns).keys()].map((x) => x++)
+  );
 }
 // function scaleByDpi() {
 //   // Get the DPR and size of the canvas
@@ -28,7 +29,6 @@ function generateGrid(columns, rows) {
 // canvas.style.width = `${rect.width}px`;
 // canvas.style.height = `${rect.height}px`;
 // }
-
 
 function drawRectByPath(ctx, x, y, width, height, color) {
   ctx.beginPath();
@@ -105,7 +105,6 @@ function drawRectByPath(ctx, x, y, width, height, color) {
 //     }
 //   }
 
-
 // }
 //       }
 //     }
@@ -117,32 +116,52 @@ function drawRectByPath(ctx, x, y, width, height, color) {
 class App {
   constructor(container) {
     this.layer = new Layer(container);
-    this.keyboardControls = new KeyboardControls(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']);
+    this.keyboardControls = new KeyboardControls([
+      "ArrowLeft",
+      "ArrowRight",
+      "ArrowUp",
+      "ArrowDown",
+      "Tab",
+      "ShiftLeft",
+    ]);
 
     this.columns = 5;
     this.rows = 10;
 
-    new Loop(this.update.bind(this), this.render.bind(this));
+    new Loop(this.update.bind(this), this.draw.bind(this));
 
     this.grid = generateGrid(this.columns, this.rows);
     this.cells = this.generateCells();
 
     this.border = {
-      x: 0,
-      y: 0,
-      width: cfg.cellWidth,
-      height: cfg.cellHeight,
+      x: 1,
+      y: 1,
+      width: cfg.cellWidth - 1,
+      height: cfg.cellHeight - 1,
       colIndex: 0,
-      rowIndex: 0
-    }
+      rowIndex: 0,
+    };
   }
 
   generateCells() {
     const cells = [];
 
     for (let rowIndex = 0; rowIndex < this.grid.length; rowIndex++) {
-      for (let colIndex = 0; colIndex < this.grid[rowIndex].length; colIndex++) {
-        cells.push(new Cell(colIndex * cfg.cellWidth, rowIndex * cfg.cellHeight, cfg.cellWidth, cfg.cellHeight, colIndex, rowIndex));
+      for (
+        let colIndex = 0;
+        colIndex < this.grid[rowIndex].length;
+        colIndex++
+      ) {
+        cells.push(
+          new Cell(
+            colIndex * cfg.cellWidth,
+            rowIndex * cfg.cellHeight,
+            cfg.cellWidth,
+            cfg.cellHeight,
+            colIndex,
+            rowIndex
+          )
+        );
       }
     }
 
@@ -150,20 +169,21 @@ class App {
   }
 
   update(correction) {
-    if (this.keyboardControls.keys.ArrowRight && this.border.colIndex < this.columns - 1) {
-      this.border.colIndex += 1;
+    if (
+      this.keyboardControls.keys.ArrowRight &&
+      this.border.colIndex < this.columns - 1
+    ) {
+      this.border.x += this.border.width * correction;
+    }
+    if (this.keyboardControls.keys.ArrowLeft) {
+      this.border.x -= this.border.width * correction;
+    }
+    if (this.keyboardControls.keys.ArrowDown) {
+      this.border.y += this.border.height * correction;
     }
 
-    if (this.keyboardControls.keys.ArrowLeft && this.border.colIndex > 0) {
-      this.border.colIndex -= 1;
-    }
-
-    if (this.keyboardControls.keys.ArrowDown && this.border.rowIndex < this.rows - 1) {
-      this.border.rowIndex += 1;
-    }
-
-    if (this.keyboardControls.keys.ArrowUp && this.border.rowIndex > 0) {
-      this.border.rowIndex -= 1;
+    if (this.keyboardControls.keys.ArrowUp) {
+      this.border.y -= this.border.height * correction;
     }
   }
 
@@ -171,29 +191,39 @@ class App {
     return { x: colIndex * cfg.cellWidth, y: rowIndex * cfg.cellHeight };
   }
 
-  render() {
-    this.layer.context.clearRect(0, 0, this.layer.w, this.layer.h);
-
+  drawGrid() {
     for (let i = 0; i < this.cells.length; i++) {
       const cell = this.cells[i];
-      this.layer.context.fillStyle = 'white';
+      this.layer.context.fillStyle = "white";
 
-      this.layer.context.fillStyle = '#E2E3E3';
+      this.layer.context.fillStyle = "#E2E3E3";
       this.layer.context.fillRect(cell.x, cell.y, cell.width, cell.height);
 
-      this.layer.context.fillStyle = 'white';
-      this.layer.context.fillRect(cell.x + 1, cell.y + 1, cell.width, cell.height - 1);
+      this.layer.context.fillStyle = "white";
+      this.layer.context.fillRect(
+        cell.x + 1,
+        cell.y + 1,
+        cell.width,
+        cell.height
+      );
     }
+  }
 
-    const pos = this.indexToPos(this.border.colIndex, this.border.rowIndex);
+  draw() {
+    this.layer.context.clearRect(0, 0, this.layer.w, this.layer.h);
 
-    // console.log(pos);
+    this.drawGrid();
 
-    this.layer.context.strokeStyle = '#2376E5';
-    this.layer.context.strokeRect(pos.x, pos.y, this.border.width, this.border.height);
-
-    // drawRectByPath(this.layer.context, pos.x, pos.y, this.border.width, this.border.height, '#2376E5');
+    this.layer.context.strokeStyle = "#2376E5";
+    this.layer.context.strokeRect(
+      this.border.x,
+      this.border.y,
+      this.border.width,
+      this.border.height
+    );
   }
 }
 
-onload = () => new App(document.querySelector('.container'));
+onload = () => {
+  new App(document.querySelector(".container"));
+};
