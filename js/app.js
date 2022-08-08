@@ -76,11 +76,18 @@ class App {
       rowIndex: 0,
     };
 
-    this.columns = 4;
-    this.rows = 10;
+    this.columns = 20;
+    this.rows = 200;
+
+    const scrollContainer = document.querySelector(".container");
+    const viewport = document.querySelector(".wrapper");
+
+    scrollContainer.style.width = `${cfg.cellWidth * this.columns}px`;
+    scrollContainer.style.height = `${cfg.cellHeight * this.rows}px`;
 
     this.grid = generateGrid(this.columns, this.rows);
     this.cells = this.generateCells();
+    this.renderableCells = this.cells;
 
     this.keyboardControls = new KeyboardControls(
       ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab", "ShiftLeft"],
@@ -151,7 +158,6 @@ class App {
           this.mouseControls.pos.x < cell.x + cell.width &&
           this.mouseControls.pos.y < cell.y + cell.height
         ) {
-          console.log(cell);
           this.border.x = cell.x + 1;
           this.border.y = cell.y + 1;
           this.border.colIndex = cell.colIndex;
@@ -170,6 +176,36 @@ class App {
     new Loop(this.update.bind(this), this.draw.bind(this));
 
     this.input = addInput(container, -1000, -1000);
+
+    let lastScrollTop = 0;
+
+    viewport.onscroll = (e) => {
+      // container.style.transform = `translate(${e.target.scrollLeft}px, ${e.target.scrollTop}px)`;
+
+      const currentScrollTopIndex = Math.floor(
+        e.target.scrollTop / cfg.cellHeight
+      );
+
+      // this.renderableCells = this.cells.filter(
+      //   (cell) => cell.rowIndex >= currentScrollTopIndex
+      // );
+
+      // if (e.target.scrollTop > lastScrollTop) {
+      //   // downscroll code
+      // } else {
+      //   // upscroll code
+      // }
+
+      // this.renderableCells.forEach((cell) => {
+      //   if (e.target.scrollTop > lastScrollTop) {
+      //     cell.y = cell.y - e.target.scrollTop;
+      //   } else {
+      //     cell.y = cell.y + e.target.scrollTop;
+      //   }
+      // });
+
+      // lastScrollTop = e.target.scrollTop <= 0 ? 0 : e.target.scrollTop;
+    };
   }
 
   generateCells() {
@@ -221,8 +257,8 @@ class App {
   }
 
   drawGrid() {
-    for (let i = 0; i < this.cells.length; i++) {
-      const cell = this.cells[i];
+    for (let i = 0; i < this.renderableCells.length; i++) {
+      const cell = this.renderableCells[i];
       this.layer.context.fillStyle = "white";
 
       this.layer.context.fillStyle = "#E2E3E3";
@@ -262,5 +298,5 @@ class App {
 }
 
 onload = () => {
-  new App(document.querySelector(".container"));
+  new App(document.querySelector(".canvas-container"));
 };
