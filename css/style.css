@@ -8,13 +8,21 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+}
+
+.wrapper {
+  display: flex;
+  justify-content: center;
+  padding-top: 100px;
 }
 
 .container {
-  width: 100%;
-  height: 100%;
-  margin: 20px;
+  width: 700px;
+  height: 500px;
   position: relative;
+  overflow-y: auto;
 }
 
 canvas {
@@ -29,4 +37,9 @@ canvas {
 input {
   position: absolute;
   z-index: 1;
+  border: 1px solid #2376e5;
+}
+
+input:focus {
+  outline: none;
 }

@@ -2,6 +2,7 @@ import { Layer } from "./layer.js";
 import { Loop } from "./loop.js";
 import { Cell } from "./cell.js";
 import { KeyboardControls } from "./keyboard-controls.js";
+import { MouseControls } from "./mouse-controls.js";
 
 const cfg = {
   cellWidth: 120,
@@ -30,31 +31,12 @@ function generateGrid(columns, rows) {
 // canvas.style.height = `${rect.height}px`;
 // }
 
-function drawRectByPath(ctx, x, y, width, height, color) {
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-  ctx.lineWidth = 2;
-  ctx.lineTo(width, y);
-  ctx.lineTo(width, height);
-  ctx.lineTo(x, height);
+function drawText(ctx, text, x, y, color) {
+  ctx.fillStyle = color;
+  ctx.font = "14px arial serif";
 
-  ctx.strokeStyle = color;
-  ctx.stroke();
-  ctx.closePath();
+  ctx.fillText(text, x, y);
 }
-
-//     function clearRect(x, y, width, height) {
-//       ctx.clearRect(x, y, width, height);
-//     }
-
-//     function drawText(text, x, y, color) {
-//       ctx.fillStyle = color;
-//       ctx.font = '14px serif';
-
-//       const textWidth = ctx.measureText(text);
-
-//       ctx.fillText(text, x, y);
-//     }
 
 function addInput(container, x, y) {
   var input = document.createElement("input");
@@ -63,55 +45,23 @@ function addInput(container, x, y) {
   input.style.position = "fixed";
   input.style.left = `${x}px`;
   input.style.top = `${y}px`;
-  input.style.height = `${cfg.cellHeight}px`;
-  input.style.width = `${cfg.cellWidth}px`;
+  input.style.height = `${cfg.cellHeight + 1}px`;
+  input.style.width = `${cfg.cellWidth + 1}px`;
 
   container.appendChild(input);
 }
 
-function moveInput(x, y) {
+function moveInput(x, y, text) {
   var input = document.querySelector("input");
 
-  input.style.left = `${x}px`;
-  input.style.top = `${y}px`;
+  input.style.left = `${x - 1}px`;
+  input.style.top = `${y - 1}px`;
+  input.value = text;
 
   input.focus();
 
   return input;
 }
-
-//     class Loop {
-//       update() {
-// for (let i = 0; i < cells.length; i++) {
-//   const cell = cells[i];
-//   ctx.fillStyle = 'white';
-//   // ctx.fill();
-
-//   drawRect(cell.x, cell.y, cell.width, cell.height, cell.backgroundColor);
-//   drawText(cell.text, cell.x + 4, cell.y + cell.height / 2, 'black');
-
-//   if (cell.x < mouseX && cell.y < mouseY && (cell.x + cell.width > mouseX) && (cell.y + cell.height > mouseY)) {
-//     drawFillRect(cell.x, cell.y, cell.width, cell.height, '#607EAA');
-//     drawText(cell.text, cell.x + 4, cell.y + cell.height / 2, 'white');
-//     if (mouseType === 'click') {
-//       const input = moveInput(cell.x, cell.y);
-//       input.value = cell.text;
-//       input.onkeydown = (e) => {
-//         setTimeout(() => {
-//           cell.text = e.target.value;
-
-//         }, 0);
-//       }
-//     }
-//   }
-
-// }
-//       }
-//     }
-
-//     addInput(-1000, -1000);
-//   }
-// })();
 
 class App {
   constructor(container) {
@@ -126,8 +76,11 @@ class App {
       rowIndex: 0,
     };
 
-    this.columns = 5;
+    this.columns = 4;
     this.rows = 10;
+
+    this.grid = generateGrid(this.columns, this.rows);
+    this.cells = this.generateCells();
 
     this.keyboardControls = new KeyboardControls(
       ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab", "ShiftLeft"],
@@ -137,10 +90,12 @@ class App {
           this.border.x < cfg.cellWidth * this.columns - this.border.width
         ) {
           this.border.x += this.border.width + 1;
+          this.border.colIndex++;
         }
 
         if (this.keyboardControls.keys.ArrowLeft && this.border.x > 1) {
           this.border.x -= this.border.width + 1;
+          this.border.colIndex--;
         }
 
         if (
@@ -148,27 +103,73 @@ class App {
           this.border.y < cfg.cellHeight * this.rows - this.border.height
         ) {
           this.border.y += this.border.height + 1;
+          this.border.rowIndex++;
         }
 
         if (this.keyboardControls.keys.ArrowUp && this.border.y > 1) {
           this.border.y -= this.border.height + 1;
+          this.border.rowIndex--;
         }
 
         const rect = container.getBoundingClientRect();
 
-        moveInput(this.border.x + rect.left, this.border.y + rect.top);
+        const target = this.cells.find(
+          (cell) =>
+            this.border.colIndex === cell.colIndex &&
+            this.border.rowIndex === cell.rowIndex
+        );
+
+        const input = moveInput(
+          this.border.x + rect.left,
+          this.border.y + rect.top,
+          target && target.text
+        );
+
+        input.onkeydown = () => {
+          setTimeout(() => {
+            this.cells.forEach((cell) => {
+              if (
+                this.border.colIndex === cell.colIndex &&
+                this.border.rowIndex === cell.rowIndex
+              ) {
+                cell.text = input.value;
+              }
+            });
+          });
+        };
 
         console.log(this.border);
         console.log(rect);
       }
     );
 
+    this.mouseControls = new MouseControls(container, () => {
+      this.cells.forEach((cell) => {
+        if (
+          this.mouseControls.pos.x > cell.x &&
+          this.mouseControls.pos.y > cell.y &&
+          this.mouseControls.pos.x < cell.x + cell.width &&
+          this.mouseControls.pos.y < cell.y + cell.height
+        ) {
+          console.log(cell);
+          this.border.x = cell.x + 1;
+          this.border.y = cell.y + 1;
+          this.border.colIndex = cell.colIndex;
+          this.border.rowIndex = cell.rowIndex;
+          const rect = container.getBoundingClientRect();
+
+          moveInput(
+            this.border.x + rect.left,
+            this.border.y + rect.top,
+            cell.text
+          );
+        }
+      });
+    });
+
     new Loop(this.update.bind(this), this.draw.bind(this));
 
-    this.grid = generateGrid(this.columns, this.rows);
-    this.cells = this.generateCells();
-
-    addInput(container, -1000, -1000);
+    this.input = addInput(container, -1000, -1000);
   }
 
   generateCells() {
@@ -186,6 +187,7 @@ class App {
             rowIndex * cfg.cellHeight,
             cfg.cellWidth,
             cfg.cellHeight,
+            colIndex + "_" + rowIndex,
             colIndex,
             rowIndex
           )
@@ -232,6 +234,14 @@ class App {
         cell.y + 1,
         cell.width,
         cell.height
+      );
+
+      drawText(
+        this.layer.context,
+        cell.text,
+        cell.x + 1,
+        cell.y + cell.height / 2 + 6,
+        "black"
       );
     }
   }
