@@ -5,7 +5,7 @@ import { KeyboardControls } from "./keyboard-controls.js";
 
 const cfg = {
   cellWidth: 120,
-  cellHeight: 30,
+  cellHeight: 24,
 };
 
 function generateGrid(columns, rows) {
@@ -56,29 +56,29 @@ function drawRectByPath(ctx, x, y, width, height, color) {
 //       ctx.fillText(text, x, y);
 //     }
 
-//     function addInput(x, y) {
-//       var input = document.createElement('input');
+function addInput(container, x, y) {
+  var input = document.createElement("input");
 
-//       input.type = 'text';
-//       input.style.position = 'fixed';
-//       input.style.left = `${x}px`;
-//       input.style.top = `${y}px`;
-//       input.style.height = `${cfg.cellHeight}px`;
-//       input.style.width = `${cfg.cellWidth}px`;
+  input.type = "text";
+  input.style.position = "fixed";
+  input.style.left = `${x}px`;
+  input.style.top = `${y}px`;
+  input.style.height = `${cfg.cellHeight}px`;
+  input.style.width = `${cfg.cellWidth}px`;
 
-//       document.body.appendChild(input);
-//     }
+  container.appendChild(input);
+}
 
-//     function moveInput(x, y) {
-//       var input = document.querySelector('input');
+function moveInput(x, y) {
+  var input = document.querySelector("input");
 
-//       input.style.left = `${x}px`;
-//       input.style.top = `${y}px`;
+  input.style.left = `${x}px`;
+  input.style.top = `${y}px`;
 
-//       input.focus();
+  input.focus();
 
-//       return input;
-//     }
+  return input;
+}
 
 //     class Loop {
 //       update() {
@@ -116,22 +116,6 @@ function drawRectByPath(ctx, x, y, width, height, color) {
 class App {
   constructor(container) {
     this.layer = new Layer(container);
-    this.keyboardControls = new KeyboardControls([
-      "ArrowLeft",
-      "ArrowRight",
-      "ArrowUp",
-      "ArrowDown",
-      "Tab",
-      "ShiftLeft",
-    ]);
-
-    this.columns = 5;
-    this.rows = 10;
-
-    new Loop(this.update.bind(this), this.draw.bind(this));
-
-    this.grid = generateGrid(this.columns, this.rows);
-    this.cells = this.generateCells();
 
     this.border = {
       x: 1,
@@ -141,6 +125,50 @@ class App {
       colIndex: 0,
       rowIndex: 0,
     };
+
+    this.columns = 5;
+    this.rows = 10;
+
+    this.keyboardControls = new KeyboardControls(
+      ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab", "ShiftLeft"],
+      () => {
+        if (
+          this.keyboardControls.keys.ArrowRight &&
+          this.border.x < cfg.cellWidth * this.columns - this.border.width
+        ) {
+          this.border.x += this.border.width + 1;
+        }
+
+        if (this.keyboardControls.keys.ArrowLeft && this.border.x > 1) {
+          this.border.x -= this.border.width + 1;
+        }
+
+        if (
+          this.keyboardControls.keys.ArrowDown &&
+          this.border.y < cfg.cellHeight * this.rows - this.border.height
+        ) {
+          this.border.y += this.border.height + 1;
+        }
+
+        if (this.keyboardControls.keys.ArrowUp && this.border.y > 1) {
+          this.border.y -= this.border.height + 1;
+        }
+
+        const rect = container.getBoundingClientRect();
+
+        moveInput(this.border.x + rect.left, this.border.y + rect.top);
+
+        console.log(this.border);
+        console.log(rect);
+      }
+    );
+
+    new Loop(this.update.bind(this), this.draw.bind(this));
+
+    this.grid = generateGrid(this.columns, this.rows);
+    this.cells = this.generateCells();
+
+    addInput(container, -1000, -1000);
   }
 
   generateCells() {
@@ -169,22 +197,21 @@ class App {
   }
 
   update(correction) {
-    if (
-      this.keyboardControls.keys.ArrowRight &&
-      this.border.colIndex < this.columns - 1
-    ) {
-      this.border.x += this.border.width * correction;
-    }
-    if (this.keyboardControls.keys.ArrowLeft) {
-      this.border.x -= this.border.width * correction;
-    }
-    if (this.keyboardControls.keys.ArrowDown) {
-      this.border.y += this.border.height * correction;
-    }
-
-    if (this.keyboardControls.keys.ArrowUp) {
-      this.border.y -= this.border.height * correction;
-    }
+    // if (
+    //   this.keyboardControls.keys.ArrowRight &&
+    //   this.border.colIndex < this.columns - 1
+    // ) {
+    //   this.border.x += this.border.width * correction * 8;
+    // }
+    // if (this.keyboardControls.keys.ArrowLeft) {
+    //   this.border.x -= this.border.width * correction;
+    // }
+    // if (this.keyboardControls.keys.ArrowDown) {
+    //   this.border.y += this.border.height * correction;
+    // }
+    // if (this.keyboardControls.keys.ArrowUp) {
+    //   this.border.y -= this.border.height * correction;
+    // }
   }
 
   indexToPos(colIndex, rowIndex) {
