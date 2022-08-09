@@ -42,7 +42,7 @@ function addInput(container, x, y) {
   var input = document.createElement("input");
 
   input.type = "text";
-  input.style.position = "fixed";
+  input.style.position = "absolute";
   input.style.left = `${x}px`;
   input.style.top = `${y}px`;
   input.style.height = `${cfg.cellHeight + 1}px`;
@@ -76,11 +76,11 @@ class App {
       rowIndex: 0,
     };
 
-    this.columns = 20;
-    this.rows = 200;
+    this.columns = 10;
+    this.rows = 100;
 
     const scrollContainer = document.querySelector(".container");
-    const viewport = document.querySelector(".wrapper");
+    this.viewport = document.querySelector(".wrapper");
 
     scrollContainer.style.width = `${cfg.cellWidth * this.columns}px`;
     scrollContainer.style.height = `${cfg.cellHeight * this.rows}px`;
@@ -92,14 +92,41 @@ class App {
     this.keyboardControls = new KeyboardControls(
       ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab", "ShiftLeft"],
       () => {
+        // if (
+        //   this.keyboardControls.keys.ArrowRight &&
+        //   this.border.x < cfg.cellWidth * this.columns - this.border.width
+        // ) {
+        //   this.border.x += this.border.width + 1;
+        //   this.border.colIndex++;
+        // }
+
+        const currentScrollLeftIndex = Math.floor(
+          this.viewport.scrollLeft / cfg.cellWidth
+        );
+
+        const viewportHorizontalLength = Math.floor(
+          this.viewport.clientWidth / cfg.cellWidth
+        );
+
         if (
           this.keyboardControls.keys.ArrowRight &&
-          this.border.x < cfg.cellWidth * this.columns - this.border.width
+          this.border.colIndex < this.columns - 1
         ) {
-          this.border.x += this.border.width + 1;
           this.border.colIndex++;
+
+          const visibleColIndex = this.border.colIndex - currentScrollLeftIndex;
+
+          this.border.x = visibleColIndex * cfg.cellWidth + 1;
+
+          if (visibleColIndex === viewportHorizontalLength) {
+            this.viewport.scrollTo(
+              this.viewport.scrollLeft + this.border.width * 3,
+              this.viewport.scrollTop
+            );
+          }
         }
 
+        // deprecated
         if (this.keyboardControls.keys.ArrowLeft && this.border.x > 1) {
           this.border.x -= this.border.width + 1;
           this.border.colIndex--;
@@ -126,27 +153,24 @@ class App {
             this.border.rowIndex === cell.rowIndex
         );
 
-        const input = moveInput(
-          this.border.x + rect.left,
-          this.border.y + rect.top,
-          target && target.text
-        );
+        // const input = moveInput(
+        //   this.border.x + rect.left,
+        //   this.border.y + rect.top,
+        //   target && target.text
+        // );
 
-        input.onkeydown = () => {
-          setTimeout(() => {
-            this.cells.forEach((cell) => {
-              if (
-                this.border.colIndex === cell.colIndex &&
-                this.border.rowIndex === cell.rowIndex
-              ) {
-                cell.text = input.value;
-              }
-            });
-          });
-        };
-
-        console.log(this.border);
-        console.log(rect);
+        // input.onkeydown = () => {
+        //   setTimeout(() => {
+        //     this.cells.forEach((cell) => {
+        //       if (
+        //         this.border.colIndex === cell.colIndex &&
+        //         this.border.rowIndex === cell.rowIndex
+        //       ) {
+        //         cell.text = input.value;
+        //       }
+        //     });
+        //   });
+        // };
       }
     );
 
@@ -162,49 +186,57 @@ class App {
           this.border.y = cell.y + 1;
           this.border.colIndex = cell.colIndex;
           this.border.rowIndex = cell.rowIndex;
+
+          console.log(this.border);
           const rect = container.getBoundingClientRect();
 
-          moveInput(
-            this.border.x + rect.left,
-            this.border.y + rect.top,
-            cell.text
-          );
+          // moveInput(
+          //   this.border.x + rect.left,
+          //   this.border.y + rect.top,
+          //   cell.text
+          // );
         }
       });
     });
 
     new Loop(this.update.bind(this), this.draw.bind(this));
 
-    this.input = addInput(container, -1000, -1000);
+    // addInput(container, -1000, -1000);
 
-    let lastScrollTop = 0;
-
-    viewport.onscroll = (e) => {
-      // container.style.transform = `translate(${e.target.scrollLeft}px, ${e.target.scrollTop}px)`;
-
+    this.viewport.onscroll = (e) => {
       const currentScrollTopIndex = Math.floor(
         e.target.scrollTop / cfg.cellHeight
       );
 
-      // this.renderableCells = this.cells.filter(
-      //   (cell) => cell.rowIndex >= currentScrollTopIndex
-      // );
+      const currentScrollLeftIndex = Math.floor(
+        e.target.scrollLeft / cfg.cellWidth
+      );
 
-      // if (e.target.scrollTop > lastScrollTop) {
-      //   // downscroll code
-      // } else {
-      //   // upscroll code
-      // }
+      const viewportVerticalLength = Math.floor(
+        this.viewport.clientHeight / cfg.cellHeight
+      );
+      const viewportHorizontalLength = Math.floor(
+        this.viewport.clientWidth / cfg.cellWidth
+      );
 
-      // this.renderableCells.forEach((cell) => {
-      //   if (e.target.scrollTop > lastScrollTop) {
-      //     cell.y = cell.y - e.target.scrollTop;
-      //   } else {
-      //     cell.y = cell.y + e.target.scrollTop;
-      //   }
-      // });
+      this.renderableCells = this.cells.filter((cell) => {
+        return (
+          cell.rowIndex >= currentScrollTopIndex &&
+          cell.rowIndex <= currentScrollTopIndex + viewportVerticalLength &&
+          cell.colIndex >= currentScrollLeftIndex &&
+          cell.colIndex <= currentScrollLeftIndex + viewportHorizontalLength
+        );
+      });
 
-      // lastScrollTop = e.target.scrollTop <= 0 ? 0 : e.target.scrollTop;
+      this.renderableCells.forEach((cell) => {
+        cell.y = (cell.rowIndex - currentScrollTopIndex) * cell.height;
+        cell.x = (cell.colIndex - currentScrollLeftIndex) * cell.width;
+      });
+
+      this.border.y =
+        (this.border.rowIndex - currentScrollTopIndex) * cfg.cellHeight + 1;
+      this.border.x =
+        (this.border.colIndex - currentScrollLeftIndex) * cfg.cellWidth + 1;
     };
   }
 

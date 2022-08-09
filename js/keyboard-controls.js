@@ -12,6 +12,8 @@ export class KeyboardControls {
   }
 
   changeState(e) {
+    e.preventDefault();
+
     if (!this.keyList.includes(e.code)) {
       return;
     }
