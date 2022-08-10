@@ -1,14 +1,14 @@
 import { cfg } from "./config/config.js";
 
 export class VirtualScroller {
-  constructor(scrollControls, columns, rows) {
+  constructor(container, scrollControls, columns, rows) {
     this.scrollControls = scrollControls;
     this.x = this.scrollControls.scrollPos.x;
     this.y = this.scrollControls.scrollPos.y;
 
     this.viewport = this.scrollControls.container;
 
-    const scrollContainer = document.querySelector(".container");
+    const scrollContainer = container;
 
     scrollContainer.style.width = `${cfg.cellWidth * columns}px`;
     scrollContainer.style.height = `${cfg.cellHeight * rows}px`;

@@ -114,6 +114,7 @@ class App {
     );
 
     this.virtualScroller = new VirtualScroller(
+      document.querySelector(".container"),
       this.scrollControls,
       cfg.columns,
       cfg.rows
