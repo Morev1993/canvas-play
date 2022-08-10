@@ -4,17 +4,11 @@ import { Cell } from "./cell.js";
 import { KeyboardControls } from "./keyboard-controls.js";
 import { MouseControls } from "./mouse-controls.js";
 import { ScrollControls } from "./scroll-controls.js";
+import { Grid } from "./grid.js";
+import { VirtualScroller } from "./virtual-scroller.js";
 
-const cfg = {
-  cellWidth: 120,
-  cellHeight: 24,
-};
+import { cfg } from "./config/config.js";
 
-function generateGrid(columns, rows) {
-  return [...Array(rows).keys()].map(() =>
-    [...Array(columns).keys()].map((x) => x++)
-  );
-}
 // function scaleByDpi() {
 //   // Get the DPR and size of the canvas
 //   const dpr = window.devicePixelRatio;
@@ -31,21 +25,6 @@ function generateGrid(columns, rows) {
 // canvas.style.width = `${rect.width}px`;
 // canvas.style.height = `${rect.height}px`;
 // }
-
-function getVerticalScrollIndex(viewport) {
-  return Math.floor(e.target.scrollTop / cfg.cellHeight);
-}
-
-function getHorizontalScrollIndex(viewport) {
-  return Math.floor(viewport.scrollLeft / cfg.cellWidth);
-}
-
-function drawText(ctx, text, x, y, color) {
-  ctx.fillStyle = color;
-  ctx.font = "14px arial serif";
-
-  ctx.fillText(text, x, y);
-}
 
 function addInput(container, x, y) {
   var input = document.createElement("input");
@@ -76,155 +55,52 @@ class App {
   constructor(container) {
     this.layer = new Layer(container);
 
-    this.border = {
-      x: 1,
-      y: 1,
-      width: cfg.cellWidth - 1,
-      height: cfg.cellHeight - 1,
-      colIndex: 0,
-      rowIndex: 0,
-    };
+    // this.mouseControls = new MouseControls(container, () => {
+    //   this.grid.cells.forEach((cell) => {
+    //     if (
+    //       this.mouseControls.pos.x > cell.x &&
+    //       this.mouseControls.pos.y > cell.y &&
+    //       this.mouseControls.pos.x < cell.x + cell.width &&
+    //       this.mouseControls.pos.y < cell.y + cell.height
+    //     ) {
+    //       this.border.x = cell.x + 1;
+    //       this.border.y = cell.y + 1;
+    //       this.border.colIndex = cell.colIndex;
+    //       this.border.rowIndex = cell.rowIndex;
 
-    this.columns = 10;
-    this.rows = 100;
+    //       console.log(this.border);
+    //       const rect = container.getBoundingClientRect();
 
-    this.grid = generateGrid(this.columns, this.rows);
-    this.cells = this.generateCells();
-    this.renderableCells = this.cells;
-
-    this.emulateScrollContainer();
-
-    this.mouseControls = new MouseControls(container, () => {
-      this.cells.forEach((cell) => {
-        if (
-          this.mouseControls.pos.x > cell.x &&
-          this.mouseControls.pos.y > cell.y &&
-          this.mouseControls.pos.x < cell.x + cell.width &&
-          this.mouseControls.pos.y < cell.y + cell.height
-        ) {
-          this.border.x = cell.x + 1;
-          this.border.y = cell.y + 1;
-          this.border.colIndex = cell.colIndex;
-          this.border.rowIndex = cell.rowIndex;
-
-          console.log(this.border);
-          const rect = container.getBoundingClientRect();
-
-          // moveInput(
-          //   this.border.x + rect.left,
-          //   this.border.y + rect.top,
-          //   cell.text
-          // );
-        }
-      });
-    });
+    //       // moveInput(
+    //       //   this.border.x + rect.left,
+    //       //   this.border.y + rect.top,
+    //       //   cell.text
+    //       // );
+    //     }
+    //   });
+    // });
 
     this.scrollControls = new ScrollControls(
-      document.querySelector(".wrapper"),
-      () => {
-        const currentScrollTopIndex = Math.floor(
-          this.scrollControls.scrollPos.y / cfg.cellHeight
-        );
-
-        const currentScrollLeftIndex = Math.floor(
-          this.scrollControls.scrollPos.x / cfg.cellWidth
-        );
-
-        const viewportVerticalLength = Math.floor(
-          this.scrollControls.container.clientHeight / cfg.cellHeight
-        );
-        const viewportHorizontalLength = Math.floor(
-          this.scrollControls.container.clientWidth / cfg.cellWidth
-        );
-
-        this.renderableCells = this.cells.filter((cell) => {
-          return (
-            cell.rowIndex >= currentScrollTopIndex &&
-            cell.rowIndex <= currentScrollTopIndex + viewportVerticalLength &&
-            cell.colIndex >= currentScrollLeftIndex &&
-            cell.colIndex <= currentScrollLeftIndex + viewportHorizontalLength
-          );
-        });
-
-        this.renderableCells.forEach((cell) => {
-          cell.y = (cell.rowIndex - currentScrollTopIndex) * cell.height;
-          cell.x = (cell.colIndex - currentScrollLeftIndex) * cell.width;
-        });
-
-        this.border.y =
-          (this.border.rowIndex - currentScrollTopIndex) * cfg.cellHeight + 1;
-        this.border.x =
-          (this.border.colIndex - currentScrollLeftIndex) * cfg.cellWidth + 1;
-      }
+      document.querySelector(".wrapper")
     );
 
     this.keyboardControls = new KeyboardControls(
       ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab", "ShiftLeft"],
       () => {
-        const currentScrollLeftIndex = Math.floor(
-          this.scrollControls.scrollPos.x / cfg.cellWidth
-        );
-
-        const viewportHorizontalLength = Math.floor(
-          this.scrollControls.container.clientWidth / cfg.cellWidth
-        );
-
-        const scrollStep = this.border.width * 3;
-
-        if (
-          this.keyboardControls.keys.ArrowRight &&
-          this.border.colIndex < this.columns - 1
-        ) {
-          this.border.colIndex++;
-
-          const visibleColIndex = this.border.colIndex - currentScrollLeftIndex;
-
-          this.border.x = visibleColIndex * cfg.cellWidth + 1;
-
-          if (visibleColIndex === viewportHorizontalLength) {
-            this.scrollControls.container.scrollTo(
-              this.scrollControls.scrollPos.x + scrollStep,
-              this.scrollControls.scrollPos.y
-            );
-          }
-        }
-
-        // deprecated
-        if (this.keyboardControls.keys.ArrowLeft && this.border.x > 1) {
-          this.border.x -= this.border.width + 1;
-          this.border.colIndex--;
-        }
-
-        if (
-          this.keyboardControls.keys.ArrowDown &&
-          this.border.y < cfg.cellHeight * this.rows - this.border.height
-        ) {
-          this.border.y += this.border.height + 1;
-          this.border.rowIndex++;
-        }
-
-        if (this.keyboardControls.keys.ArrowUp && this.border.y > 1) {
-          this.border.y -= this.border.height + 1;
-          this.border.rowIndex--;
-        }
-
-        const rect = container.getBoundingClientRect();
-
-        const target = this.cells.find(
-          (cell) =>
-            this.border.colIndex === cell.colIndex &&
-            this.border.rowIndex === cell.rowIndex
-        );
-
+        // const rect = container.getBoundingClientRect();
+        // const target = this.grid.cells.find(
+        //   (cell) =>
+        //     this.border.colIndex === cell.colIndex &&
+        //     this.border.rowIndex === cell.rowIndex
+        // );
         // const input = moveInput(
         //   this.border.x + rect.left,
         //   this.border.y + rect.top,
         //   target && target.text
         // );
-
         // input.onkeydown = () => {
         //   setTimeout(() => {
-        //     this.cells.forEach((cell) => {
+        //     this.grid.cells.forEach((cell) => {
         //       if (
         //         this.border.colIndex === cell.colIndex &&
         //         this.border.rowIndex === cell.rowIndex
@@ -237,42 +113,21 @@ class App {
       }
     );
 
+    this.virtualScroller = new VirtualScroller(
+      this.scrollControls,
+      cfg.columns,
+      cfg.rows
+    );
+
+    this.grid = new Grid(this.layer, this.virtualScroller);
+
+    this.scrollControls.listen(() => {
+      this.grid.updateByScroll();
+    });
+
     new Loop(this.update.bind(this), this.draw.bind(this));
 
     // addInput(container, -1000, -1000);
-  }
-
-  emulateScrollContainer() {
-    const scrollContainer = document.querySelector(".container");
-
-    scrollContainer.style.width = `${cfg.cellWidth * this.columns}px`;
-    scrollContainer.style.height = `${cfg.cellHeight * this.rows}px`;
-  }
-
-  generateCells() {
-    const cells = [];
-
-    for (let rowIndex = 0; rowIndex < this.grid.length; rowIndex++) {
-      for (
-        let colIndex = 0;
-        colIndex < this.grid[rowIndex].length;
-        colIndex++
-      ) {
-        cells.push(
-          new Cell(
-            colIndex * cfg.cellWidth,
-            rowIndex * cfg.cellHeight,
-            cfg.cellWidth,
-            cfg.cellHeight,
-            colIndex + "_" + rowIndex,
-            colIndex,
-            rowIndex
-          )
-        );
-      }
-    }
-
-    return cells;
   }
 
   update(correction) {
@@ -293,44 +148,10 @@ class App {
     // }
   }
 
-  drawGrid() {
-    for (let i = 0; i < this.renderableCells.length; i++) {
-      const cell = this.renderableCells[i];
-      this.layer.context.fillStyle = "white";
-
-      this.layer.context.fillStyle = "#E2E3E3";
-      this.layer.context.fillRect(cell.x, cell.y, cell.width, cell.height);
-
-      this.layer.context.fillStyle = "white";
-      this.layer.context.fillRect(
-        cell.x + 1,
-        cell.y + 1,
-        cell.width,
-        cell.height
-      );
-
-      drawText(
-        this.layer.context,
-        cell.text,
-        cell.x + 1,
-        cell.y + cell.height / 2 + 6,
-        "black"
-      );
-    }
-  }
-
   draw() {
     this.layer.context.clearRect(0, 0, this.layer.w, this.layer.h);
 
-    this.drawGrid();
-
-    this.layer.context.strokeStyle = "#2376E5";
-    this.layer.context.strokeRect(
-      this.border.x,
-      this.border.y,
-      this.border.width,
-      this.border.height
-    );
+    this.grid.draw();
   }
 }
 

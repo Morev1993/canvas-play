@@ -3,11 +3,15 @@ export class ScrollControls {
     this.scrollPos = { x: 0, y: 0 };
 
     this.container = container;
-    this.update = update;
+    // this.update = update;
+  }
 
+  listen(update) {
     this.container.addEventListener(`scroll`, (e) => {
-      this.changeState(e);
-      this.update();
+      this.scrollPos.x = e.target.scrollLeft;
+      this.scrollPos.y = e.target.scrollTop;
+
+      update();
     });
   }
 
