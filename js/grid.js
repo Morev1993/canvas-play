@@ -25,17 +25,102 @@ export class Grid {
   }
 
   moveRight() {
+    if (this.border.colIndex === this.columns - 1) {
+      return;
+    }
+
     const scrollStep = this.border.width * 3;
     this.border.colIndex++;
 
     this.border.x = this.visibleColIndex() * cfg.cellWidth + 1;
 
-    if (this.visibleColIndex() === this.viewportLengthX()) {
+    if (this.visibleColIndex() === this.virtualScroller.viewportLengthX()) {
+      console.log(this.virtualScroller.x + scrollStep);
+
       this.virtualScroller.viewport.scrollTo(
         this.virtualScroller.x + scrollStep,
         this.virtualScroller.y
       );
     }
+  }
+
+  moveLeft() {
+    if (this.border.colIndex === 0) {
+      return;
+    }
+
+    const scrollStep = this.border.width * 3;
+    this.border.colIndex--;
+
+    this.border.x = this.visibleColIndex() * cfg.cellWidth + 1;
+
+    if (this.visibleColIndex() === 0) {
+      this.virtualScroller.viewport.scrollTo(
+        this.virtualScroller.x - scrollStep,
+        this.virtualScroller.y
+      );
+    }
+  }
+
+  moveUp() {
+    if (this.border.rowIndex === 0) {
+      return;
+    }
+
+    const scrollStep = this.border.height * 3;
+    this.border.rowIndex--;
+
+    this.border.y = this.visibleRowIndex() * cfg.cellHeight + 1;
+
+    if (this.visibleRowIndex() === 0) {
+      this.virtualScroller.viewport.scrollTo(
+        this.virtualScroller.x,
+        this.virtualScroller.y - scrollStep
+      );
+    }
+  }
+
+  moveDown() {
+    if (this.border.rowIndex === this.rows - 1) {
+      return;
+    }
+
+    const scrollStep = this.border.height * 3;
+    this.border.rowIndex++;
+
+    this.border.y = this.visibleRowIndex() * cfg.cellHeight + 1;
+
+    if (this.visibleRowIndex() === this.virtualScroller.viewportLengthY()) {
+      this.virtualScroller.viewport.scrollTo(
+        this.virtualScroller.x,
+        this.virtualScroller.y + scrollStep
+      );
+    }
+  }
+
+  select(x, y) {
+    this.cells.forEach((cell) => {
+      if (
+        x > cell.x &&
+        y > cell.y &&
+        x < cell.x + cell.width &&
+        y < cell.y + cell.height
+      ) {
+        this.border.x = cell.x + 1;
+        this.border.y = cell.y + 1;
+        this.border.colIndex = cell.colIndex;
+        this.border.rowIndex = cell.rowIndex;
+
+        console.log(this.border);
+        // const rect = container.getBoundingClientRect();
+
+        // moveInput(
+        //   this.border.x + rect.left,
+        //   this.border.y + rect.top,
+        //   cell.text
+        // );
+      }
+    });
   }
 
   visibleColIndex() {

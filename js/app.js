@@ -55,38 +55,53 @@ class App {
   constructor(container) {
     this.layer = new Layer(container);
 
-    // this.mouseControls = new MouseControls(container, () => {
-    //   this.grid.cells.forEach((cell) => {
-    //     if (
-    //       this.mouseControls.pos.x > cell.x &&
-    //       this.mouseControls.pos.y > cell.y &&
-    //       this.mouseControls.pos.x < cell.x + cell.width &&
-    //       this.mouseControls.pos.y < cell.y + cell.height
-    //     ) {
-    //       this.border.x = cell.x + 1;
-    //       this.border.y = cell.y + 1;
-    //       this.border.colIndex = cell.colIndex;
-    //       this.border.rowIndex = cell.rowIndex;
-
-    //       console.log(this.border);
-    //       const rect = container.getBoundingClientRect();
-
-    //       // moveInput(
-    //       //   this.border.x + rect.left,
-    //       //   this.border.y + rect.top,
-    //       //   cell.text
-    //       // );
-    //     }
-    //   });
-    // });
-
     this.scrollControls = new ScrollControls(
       document.querySelector(".wrapper")
     );
 
+    this.virtualScroller = new VirtualScroller(
+      document.querySelector(".container"),
+      this.scrollControls,
+      cfg.columns,
+      cfg.rows
+    );
+
+    this.grid = new Grid(this.layer, this.virtualScroller);
+
+    this.scrollControls.listen(() => {
+      this.grid.updateByScroll();
+    });
+
+    this.mouseControls = new MouseControls(container, () => {
+      this.grid.select(this.mouseControls.pos.x, this.mouseControls.pos.y);
+    });
+
     this.keyboardControls = new KeyboardControls(
       ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab", "ShiftLeft"],
       () => {
+        if (
+          this.keyboardControls.keys.ArrowRight ||
+          (this.keyboardControls.keys.Tab &&
+            !this.keyboardControls.keys.ShiftLeft)
+        ) {
+          this.grid.moveRight();
+        }
+
+        if (
+          this.keyboardControls.keys.ArrowLeft ||
+          (this.keyboardControls.keys.Tab &&
+            this.keyboardControls.keys.ShiftLeft)
+        ) {
+          this.grid.moveLeft();
+        }
+
+        if (this.keyboardControls.keys.ArrowDown) {
+          this.grid.moveDown();
+        }
+
+        if (this.keyboardControls.keys.ArrowUp) {
+          this.grid.moveUp();
+        }
         // const rect = container.getBoundingClientRect();
         // const target = this.grid.cells.find(
         //   (cell) =>
@@ -112,19 +127,6 @@ class App {
         // };
       }
     );
-
-    this.virtualScroller = new VirtualScroller(
-      document.querySelector(".container"),
-      this.scrollControls,
-      cfg.columns,
-      cfg.rows
-    );
-
-    this.grid = new Grid(this.layer, this.virtualScroller);
-
-    this.scrollControls.listen(() => {
-      this.grid.updateByScroll();
-    });
 
     new Loop(this.update.bind(this), this.draw.bind(this));
 

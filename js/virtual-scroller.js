@@ -3,8 +3,6 @@ import { cfg } from "./config/config.js";
 export class VirtualScroller {
   constructor(container, scrollControls, columns, rows) {
     this.scrollControls = scrollControls;
-    this.x = this.scrollControls.scrollPos.x;
-    this.y = this.scrollControls.scrollPos.y;
 
     this.viewport = this.scrollControls.container;
 
@@ -12,6 +10,14 @@ export class VirtualScroller {
 
     scrollContainer.style.width = `${cfg.cellWidth * columns}px`;
     scrollContainer.style.height = `${cfg.cellHeight * rows}px`;
+  }
+
+  get x() {
+    return this.scrollControls.scrollPos.x;
+  }
+
+  get y() {
+    return this.scrollControls.scrollPos.y;
   }
 
   scrollIndexY() {
@@ -23,7 +29,7 @@ export class VirtualScroller {
   }
 
   viewportLengthY() {
-    return this.viewport.clientHeight / cfg.cellHeight;
+    return Math.floor(this.viewport.clientHeight / cfg.cellHeight);
   }
 
   viewportLengthX() {
