@@ -1,6 +1,5 @@
 import { Layer } from "./layer.js";
 import { Loop } from "./loop.js";
-import { Cell } from "./cell.js";
 import { KeyboardControls } from "./keyboard-controls.js";
 import { MouseControls } from "./mouse-controls.js";
 import { ScrollControls } from "./scroll-controls.js";

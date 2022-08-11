@@ -35,8 +35,6 @@ export class Grid {
     this.border.x = this.visibleColIndex() * cfg.cellWidth + 1;
 
     if (this.visibleColIndex() === this.virtualScroller.viewportLengthX()) {
-      console.log(this.virtualScroller.x + scrollStep);
-
       this.virtualScroller.viewport.scrollTo(
         this.virtualScroller.x + scrollStep,
         this.virtualScroller.y
