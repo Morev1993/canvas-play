@@ -97,28 +97,30 @@ export class Grid {
   }
 
   select(x, y) {
-    this.cells.forEach((cell) => {
-      if (
+    const target = this.renderableCells.find((cell) => {
+      return (
         x > cell.x &&
         y > cell.y &&
         x < cell.x + cell.width &&
         y < cell.y + cell.height
-      ) {
-        this.border.x = cell.x + 1;
-        this.border.y = cell.y + 1;
-        this.border.colIndex = cell.colIndex;
-        this.border.rowIndex = cell.rowIndex;
-
-        console.log(this.border);
-        // const rect = container.getBoundingClientRect();
-
-        // moveInput(
-        //   this.border.x + rect.left,
-        //   this.border.y + rect.top,
-        //   cell.text
-        // );
-      }
+      );
     });
+
+    if (target) {
+      this.border.colIndex = target.colIndex;
+      this.border.rowIndex = target.rowIndex;
+
+      this.border.x = this.visibleColIndex() * cfg.cellWidth + 1;
+      this.border.y = this.visibleRowIndex() * cfg.cellHeight + 1;
+    }
+
+    // const rect = container.getBoundingClientRect();
+
+    // moveInput(
+    //   this.border.x + rect.left,
+    //   this.border.y + rect.top,
+    //   cell.text
+    // );
   }
 
   visibleColIndex() {
