@@ -4,8 +4,12 @@ export class MouseControls {
 
     this.container = container;
     this.update = update;
+    this.down = false;
 
-    this.container.addEventListener(`mouseup`, (e) => this.changeState(e));
+    this.container.addEventListener(`mouseup`, (e) => {
+      this.changeState(e);
+      this.update();
+    });
     this.container.addEventListener(`mousedown`, (e) => {
       this.changeState(e);
       this.update();
@@ -19,5 +23,13 @@ export class MouseControls {
 
     this.pos.x = e.clientX - rect.left;
     this.pos.y = e.clientY - rect.top;
+
+    if (e.type === "mousedown") {
+      this.down = true;
+    }
+
+    if (e.type === "mouseup") {
+      this.down = false;
+    }
   }
 }

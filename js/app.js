@@ -58,6 +58,15 @@ class App {
       document.querySelector(".wrapper")
     );
 
+    this.mouseControls = new MouseControls(container, () => {
+      if (!this.mouseControls.down) {
+        this.grid.autofill.dragStart = false;
+        console.log(this.grid.autofill.dragStart);
+      } else {
+        this.grid.select(this.mouseControls.pos.x, this.mouseControls.pos.y);
+      }
+    });
+
     this.virtualScroller = new VirtualScroller(
       document.querySelector(".container"),
       this.scrollControls,
@@ -65,14 +74,10 @@ class App {
       cfg.rows
     );
 
-    this.grid = new Grid(this.layer, this.virtualScroller);
+    this.grid = new Grid(this.layer, this.virtualScroller, this.mouseControls);
 
     this.scrollControls.listen(() => {
       this.grid.updateByScroll();
-    });
-
-    this.mouseControls = new MouseControls(container, () => {
-      this.grid.select(this.mouseControls.pos.x, this.mouseControls.pos.y);
     });
 
     this.keyboardControls = new KeyboardControls(

@@ -1,10 +1,13 @@
 import { Cell } from "./cell.js";
+import { Autofill } from "./autofill.js";
+
 import { drawText } from "./utils.js";
 import { cfg } from "./config/config.js";
 
 export class Grid {
-  constructor(layer, virtualScroller) {
+  constructor(layer, virtualScroller, mouseControls) {
     this.layer = layer;
+    this.mouseControls = mouseControls;
     this.virtualScroller = virtualScroller;
 
     this.border = {
@@ -22,6 +25,11 @@ export class Grid {
     this.grid = this.generateGrid(this.columns, this.rows);
     this.cells = this.generateCells();
     this.renderableCells = this.cells;
+
+    this.autofillX = this.border.x + this.border.width - 3;
+    this.autofillY = this.border.y + this.border.height - 3;
+
+    this.autofill = new Autofill(6, 6, this.virtualScroller.container);
   }
 
   moveRight() {
@@ -40,6 +48,8 @@ export class Grid {
         this.virtualScroller.y
       );
     }
+
+    this.updateAutofillPosition();
   }
 
   moveLeft() {
@@ -58,6 +68,8 @@ export class Grid {
         this.virtualScroller.y
       );
     }
+
+    this.updateAutofillPosition();
   }
 
   moveUp() {
@@ -76,6 +88,8 @@ export class Grid {
         this.virtualScroller.y - scrollStep
       );
     }
+
+    this.updateAutofillPosition();
   }
 
   moveDown() {
@@ -94,6 +108,7 @@ export class Grid {
         this.virtualScroller.y + scrollStep
       );
     }
+    this.updateAutofillPosition();
   }
 
   select(x, y) {
@@ -113,6 +128,8 @@ export class Grid {
       this.border.x = this.visibleColIndex() * cfg.cellWidth + 1;
       this.border.y = this.visibleRowIndex() * cfg.cellHeight + 1;
     }
+
+    this.updateAutofillPosition();
 
     // const rect = container.getBoundingClientRect();
 
@@ -180,6 +197,13 @@ export class Grid {
 
     this.border.y = this.visibleRowIndex() * cfg.cellHeight + 1;
     this.border.x = this.visibleColIndex() * cfg.cellWidth + 1;
+
+    this.updateAutofillPosition();
+  }
+
+  updateAutofillPosition() {
+    this.autofillX = this.border.x + this.border.width - 3;
+    this.autofillY = this.border.y + this.border.height - 3;
   }
 
   generateGrid(columns, rows) {
@@ -220,5 +244,43 @@ export class Grid {
       this.border.width,
       this.border.height
     );
+
+    if (this.autofill.dragStart) {
+      const xLeft = this.border.x;
+      const xRight = this.border.x + this.border.width;
+
+      const yStart = this.border.y + this.border.height;
+      const yEnd = this.mouseControls.pos.y - yStart;
+
+      const y =
+        yStart +
+        Math.round(yEnd / this.border.height) * (this.border.height + 1);
+
+      this.layer.context.beginPath();
+      this.layer.context.setLineDash([4, 6]);
+      this.layer.context.moveTo(xLeft, yStart);
+      this.layer.context.lineTo(xLeft, y);
+      this.layer.context.strokeStyle = "black";
+      this.layer.context.stroke();
+
+      this.layer.context.beginPath();
+      this.layer.context.setLineDash([4, 6]);
+      this.layer.context.moveTo(xRight, yStart);
+      this.layer.context.lineTo(xRight, y);
+      this.layer.context.strokeStyle = "black";
+      this.layer.context.stroke();
+
+      this.layer.context.beginPath();
+      this.layer.context.setLineDash([4, 6]);
+      this.layer.context.moveTo(xLeft, y);
+      this.layer.context.lineTo(xRight, y);
+      this.layer.context.strokeStyle = "black";
+      this.layer.context.stroke();
+
+      this.autofillX = xRight - 3;
+      this.autofillY = y - 3;
+    }
+
+    this.autofill.changePosition(this.autofillX, this.autofillY);
   }
 }

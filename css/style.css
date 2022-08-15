@@ -48,3 +48,11 @@ input {
 input:focus {
   outline: none;
 }
+
+.autofill {
+  background: #2376e5;
+  display: block;
+  position: absolute;
+  z-index: 1;
+  cursor: crosshair;
+}

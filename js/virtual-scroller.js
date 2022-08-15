@@ -2,6 +2,8 @@ import { cfg } from "./config/config.js";
 
 export class VirtualScroller {
   constructor(container, scrollControls, columns, rows) {
+    this.container = container;
+
     this.scrollControls = scrollControls;
 
     this.viewport = this.scrollControls.container;
