@@ -25,31 +25,6 @@ import { cfg } from "./config/config.js";
 // canvas.style.height = `${rect.height}px`;
 // }
 
-function addInput(container, x, y) {
-  var input = document.createElement("input");
-
-  input.type = "text";
-  input.style.position = "absolute";
-  input.style.left = `${x}px`;
-  input.style.top = `${y}px`;
-  input.style.height = `${cfg.cellHeight + 1}px`;
-  input.style.width = `${cfg.cellWidth + 1}px`;
-
-  container.appendChild(input);
-}
-
-function moveInput(x, y, text) {
-  var input = document.querySelector("input");
-
-  input.style.left = `${x - 1}px`;
-  input.style.top = `${y - 1}px`;
-  input.value = text;
-
-  input.focus();
-
-  return input;
-}
-
 class App {
   constructor(container) {
     this.layer = new Layer(container);
@@ -61,7 +36,6 @@ class App {
     this.mouseControls = new MouseControls(container, () => {
       if (!this.mouseControls.down) {
         this.grid.autofill.dragStart = false;
-        console.log(this.grid.autofill.dragStart);
       } else {
         this.grid.select(this.mouseControls.pos.x, this.mouseControls.pos.y);
       }
@@ -106,35 +80,10 @@ class App {
         if (this.keyboardControls.keys.ArrowUp) {
           this.grid.moveUp();
         }
-        // const rect = container.getBoundingClientRect();
-        // const target = this.grid.cells.find(
-        //   (cell) =>
-        //     this.border.colIndex === cell.colIndex &&
-        //     this.border.rowIndex === cell.rowIndex
-        // );
-        // const input = moveInput(
-        //   this.border.x + rect.left,
-        //   this.border.y + rect.top,
-        //   target && target.text
-        // );
-        // input.onkeydown = () => {
-        //   setTimeout(() => {
-        //     this.grid.cells.forEach((cell) => {
-        //       if (
-        //         this.border.colIndex === cell.colIndex &&
-        //         this.border.rowIndex === cell.rowIndex
-        //       ) {
-        //         cell.text = input.value;
-        //       }
-        //     });
-        //   });
-        // };
       }
     );
 
     new Loop(this.update.bind(this), this.draw.bind(this));
-
-    // addInput(container, -1000, -1000);
   }
 
   update(correction) {

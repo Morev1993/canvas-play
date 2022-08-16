@@ -1,5 +1,7 @@
 import { Cell } from "./cell.js";
 import { Autofill } from "./autofill.js";
+import { Input } from "./input.js";
+import { Selection } from "./selection.js";
 
 import { drawText } from "./utils.js";
 import { cfg } from "./config/config.js";
@@ -30,6 +32,20 @@ export class Grid {
     this.autofillY = this.border.y + this.border.height - 3;
 
     this.autofill = new Autofill(6, 6, this.virtualScroller.container);
+    this.selection = new Selection(this.virtualScroller.container);
+
+    const target = this.renderableCells.find(
+      (cell) =>
+        this.border.colIndex === cell.colIndex &&
+        this.border.rowIndex === cell.rowIndex
+    );
+
+    this.input = new Input(
+      this.border.x,
+      this.border.y,
+      target && target.text,
+      this.virtualScroller.container
+    );
   }
 
   moveRight() {
@@ -49,7 +65,7 @@ export class Grid {
       );
     }
 
-    this.updateAutofillPosition();
+    this.updateControls();
   }
 
   moveLeft() {
@@ -69,7 +85,7 @@ export class Grid {
       );
     }
 
-    this.updateAutofillPosition();
+    this.updateControls();
   }
 
   moveUp() {
@@ -89,7 +105,7 @@ export class Grid {
       );
     }
 
-    this.updateAutofillPosition();
+    this.updateControls();
   }
 
   moveDown() {
@@ -108,7 +124,7 @@ export class Grid {
         this.virtualScroller.y + scrollStep
       );
     }
-    this.updateAutofillPosition();
+    this.updateControls();
   }
 
   select(x, y) {
@@ -129,7 +145,7 @@ export class Grid {
       this.border.y = this.visibleRowIndex() * cfg.cellHeight + 1;
     }
 
-    this.updateAutofillPosition();
+    this.updateControls();
 
     // const rect = container.getBoundingClientRect();
 
@@ -198,12 +214,40 @@ export class Grid {
     this.border.y = this.visibleRowIndex() * cfg.cellHeight + 1;
     this.border.x = this.visibleColIndex() * cfg.cellWidth + 1;
 
-    this.updateAutofillPosition();
+    this.updateControls();
   }
 
-  updateAutofillPosition() {
+  updateControls() {
+    this.autofill.cover = {};
     this.autofillX = this.border.x + this.border.width - 3;
     this.autofillY = this.border.y + this.border.height - 3;
+
+    const target = this.renderableCells.find(
+      (cell) =>
+        this.border.colIndex === cell.colIndex &&
+        this.border.rowIndex === cell.rowIndex
+    );
+
+    this.input.changePosition(
+      this.border.x,
+      this.border.y,
+      target && target.text
+    );
+
+    this.input.element.onkeydown = (e) => {
+      setTimeout(() => {
+        this.renderableCells.forEach((cell) => {
+          if (
+            this.border.colIndex === cell.colIndex &&
+            this.border.rowIndex === cell.rowIndex
+          ) {
+            cell.text = this.input.element.value;
+          }
+        });
+      });
+    };
+
+    this.selection.remove();
   }
 
   generateGrid(columns, rows) {
@@ -238,6 +282,7 @@ export class Grid {
     }
 
     this.layer.context.strokeStyle = "#2376E5";
+    this.layer.context.setLineDash([]);
     this.layer.context.strokeRect(
       this.border.x,
       this.border.y,
@@ -246,41 +291,126 @@ export class Grid {
     );
 
     if (this.autofill.dragStart) {
-      const xLeft = this.border.x;
-      const xRight = this.border.x + this.border.width;
-
       const yStart = this.border.y + this.border.height;
       const yEnd = this.mouseControls.pos.y - yStart;
 
-      const y =
-        yStart +
-        Math.round(yEnd / this.border.height) * (this.border.height + 1);
+      this.autofill.cover = {
+        xLeft: this.border.x,
+        xRight: this.border.x + this.border.width,
+        yStart: yStart,
+        yEnd:
+          yStart +
+          Math.round(yEnd / this.border.height) * (this.border.height + 1),
+      };
 
       this.layer.context.beginPath();
-      this.layer.context.setLineDash([4, 6]);
-      this.layer.context.moveTo(xLeft, yStart);
-      this.layer.context.lineTo(xLeft, y);
+      this.layer.context.moveTo(
+        this.autofill.cover.xLeft,
+        this.autofill.cover.yStart
+      );
+      this.layer.context.lineTo(
+        this.autofill.cover.xLeft,
+        this.autofill.cover.yEnd
+      );
       this.layer.context.strokeStyle = "black";
+      this.layer.context.setLineDash([4, 6]);
       this.layer.context.stroke();
 
       this.layer.context.beginPath();
-      this.layer.context.setLineDash([4, 6]);
-      this.layer.context.moveTo(xRight, yStart);
-      this.layer.context.lineTo(xRight, y);
+      this.layer.context.moveTo(
+        this.autofill.cover.xRight,
+        this.autofill.cover.yStart
+      );
+      this.layer.context.lineTo(
+        this.autofill.cover.xRight,
+        this.autofill.cover.yEnd
+      );
       this.layer.context.strokeStyle = "black";
+      this.layer.context.setLineDash([4, 6]);
       this.layer.context.stroke();
 
       this.layer.context.beginPath();
-      this.layer.context.setLineDash([4, 6]);
-      this.layer.context.moveTo(xLeft, y);
-      this.layer.context.lineTo(xRight, y);
+      this.layer.context.moveTo(
+        this.autofill.cover.xLeft,
+        this.autofill.cover.yEnd
+      );
+      this.layer.context.lineTo(
+        this.autofill.cover.xRight,
+        this.autofill.cover.yEnd
+      );
       this.layer.context.strokeStyle = "black";
+      this.layer.context.setLineDash([4, 6]);
       this.layer.context.stroke();
 
-      this.autofillX = xRight - 3;
-      this.autofillY = y - 3;
+      this.autofillX = this.autofill.cover.xRight - 3;
+      this.autofillY = this.autofill.cover.yEnd - 3;
+    } else {
+      if (this.autofillY !== this.autofill.cover.yStart - 3) {
+        this.layer.context.beginPath();
+        this.layer.context.moveTo(
+          this.autofill.cover.xLeft,
+          this.autofill.cover.yStart
+        );
+        this.layer.context.lineTo(
+          this.autofill.cover.xLeft,
+          this.autofill.cover.yEnd
+        );
+        this.layer.context.strokeStyle = "#2376E5";
+        this.layer.context.setLineDash([]);
+        this.layer.context.stroke();
+
+        this.layer.context.beginPath();
+        this.layer.context.moveTo(
+          this.autofill.cover.xRight,
+          this.autofill.cover.yStart
+        );
+        this.layer.context.lineTo(
+          this.autofill.cover.xRight,
+          this.autofill.cover.yEnd
+        );
+        this.layer.context.strokeStyle = "#2376E5";
+        this.layer.context.setLineDash([]);
+        this.layer.context.stroke();
+
+        this.layer.context.beginPath();
+        this.layer.context.moveTo(
+          this.autofill.cover.xLeft,
+          this.autofill.cover.yEnd
+        );
+        this.layer.context.lineTo(
+          this.autofill.cover.xRight,
+          this.autofill.cover.yEnd
+        );
+        this.layer.context.strokeStyle = "#2376E5";
+        this.layer.context.setLineDash([]);
+        this.layer.context.stroke();
+
+        this.selection.setBounds(
+          this.autofill.cover.xLeft,
+          this.autofill.cover.yStart,
+          this.autofill.cover.xRight - this.autofill.cover.xLeft,
+          this.autofill.cover.yEnd - this.autofill.cover.yStart
+        );
+
+        const lastIndex =
+          (this.autofill.cover.yEnd - this.autofill.cover.yStart) /
+          this.border.height;
+
+        this.renderableCells
+          .filter((cell) => {
+            return (
+              cell.colIndex === this.border.colIndex &&
+              cell.rowIndex > this.border.rowIndex &&
+              cell.rowIndex < this.border.rowIndex + lastIndex
+            );
+          })
+          .forEach((cell) => {
+            cell.text = this.input.element.value;
+          });
+      }
     }
 
+    this.selection.draw();
     this.autofill.changePosition(this.autofillX, this.autofillY);
   }
 }

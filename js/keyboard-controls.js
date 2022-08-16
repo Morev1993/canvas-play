@@ -12,10 +12,10 @@ export class KeyboardControls {
   }
 
   changeState(e) {
-    e.preventDefault();
-
     if (!this.keyList.includes(e.code)) {
       return;
+    } else {
+      e.preventDefault();
     }
 
     this.keys[e.code] = e.type === "keydown" ? true : false;
