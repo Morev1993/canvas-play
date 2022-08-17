@@ -26,7 +26,7 @@ export class Grid {
 
     this.grid = this.generateGrid(this.columns, this.rows);
     this.cells = this.generateCells();
-    this.renderableCells = this.cells;
+    this.viewportCells = this.getViewportCells();
 
     this.autofill = new Autofill(
       this.border.x + this.border.width - 3,
@@ -37,7 +37,7 @@ export class Grid {
     );
     this.selection = new Selection(this.layer.container);
 
-    const target = this.renderableCells.find(
+    const target = this.viewportCells.find(
       (cell) =>
         this.border.colIndex === cell.colIndex &&
         this.border.rowIndex === cell.rowIndex
@@ -131,7 +131,7 @@ export class Grid {
   }
 
   select(x, y) {
-    const target = this.renderableCells.find((cell) => {
+    const target = this.viewportCells.find((cell) => {
       return (
         x > cell.x &&
         y > cell.y &&
@@ -149,6 +149,21 @@ export class Grid {
     }
 
     this.updateControls();
+  }
+
+  getViewportCells() {
+    return this.cells.filter((cell) => {
+      return (
+        cell.rowIndex >= this.virtualScroller.scrollIndexY() &&
+        cell.rowIndex <=
+          this.virtualScroller.scrollIndexY() +
+            this.virtualScroller.viewportLengthY() &&
+        cell.colIndex >= this.virtualScroller.scrollIndexX() &&
+        cell.colIndex <=
+          this.virtualScroller.scrollIndexX() +
+            this.virtualScroller.viewportLengthX()
+      );
+    });
   }
 
   visibleColIndex() {
@@ -186,20 +201,9 @@ export class Grid {
   }
 
   updateByScroll() {
-    this.renderableCells = this.cells.filter((cell) => {
-      return (
-        cell.rowIndex >= this.virtualScroller.scrollIndexY() &&
-        cell.rowIndex <=
-          this.virtualScroller.scrollIndexY() +
-            this.virtualScroller.viewportLengthY() &&
-        cell.colIndex >= this.virtualScroller.scrollIndexX() &&
-        cell.colIndex <=
-          this.virtualScroller.scrollIndexX() +
-            this.virtualScroller.viewportLengthX()
-      );
-    });
+    this.viewportCells = this.getViewportCells();
 
-    this.renderableCells.forEach((cell) => {
+    this.viewportCells.forEach((cell) => {
       cell.y =
         (cell.rowIndex - this.virtualScroller.scrollIndexY()) * cell.height;
       cell.x =
@@ -220,7 +224,7 @@ export class Grid {
       this.border.y + this.border.height - 3
     );
 
-    const target = this.renderableCells.find(
+    const target = this.viewportCells.find(
       (cell) =>
         this.border.colIndex === cell.colIndex &&
         this.border.rowIndex === cell.rowIndex
@@ -234,7 +238,7 @@ export class Grid {
 
     this.input.element.onkeydown = (e) => {
       setTimeout(() => {
-        this.renderableCells.forEach((cell) => {
+        this.viewportCells.forEach((cell) => {
           if (
             this.border.colIndex === cell.colIndex &&
             this.border.rowIndex === cell.rowIndex
@@ -274,7 +278,7 @@ export class Grid {
         (this.autofill.cover.yEnd - this.autofill.cover.yStart) /
         this.border.height;
 
-      this.renderableCells
+      this.viewportCells
         .filter((cell) => {
           return (
             cell.colIndex === this.border.colIndex &&
@@ -303,8 +307,8 @@ export class Grid {
   }
 
   draw() {
-    for (let i = 0; i < this.renderableCells.length; i++) {
-      const cell = this.renderableCells[i];
+    for (let i = 0; i < this.viewportCells.length; i++) {
+      const cell = this.viewportCells[i];
       this.layer.context.fillStyle = "white";
 
       this.layer.context.fillStyle = "#E2E3E3";
