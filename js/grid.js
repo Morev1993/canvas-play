@@ -29,10 +29,10 @@ export class Grid {
     this.viewportCells = this.getViewportCells();
 
     this.autofill = new Autofill(
-      this.border.x + this.border.width - 3,
-      this.border.y + this.border.height - 3,
-      6,
-      6,
+      this.border.x + this.border.width - 4,
+      this.border.y + this.border.height - 4,
+      8,
+      8,
       this.layer
     );
     this.selection = new Selection(this.layer.container);
@@ -220,8 +220,8 @@ export class Grid {
     this.autofill.cover = {};
 
     this.autofill.changePosition(
-      this.border.x + this.border.width - 3,
-      this.border.y + this.border.height - 3
+      this.border.x + this.border.width - this.autofill.element.clientWidth / 2,
+      this.border.y + this.border.height - this.autofill.element.clientWidth / 2
     );
 
     const target = this.viewportCells.find(
@@ -261,30 +261,61 @@ export class Grid {
   update() {
     if (this.autofill.dragStart) {
       const yStart = this.border.y + this.border.height;
-      const yEnd = this.mouseControls.pos.y - yStart;
+      const cellLengthY =
+        (this.mouseControls.pos.y - yStart) / this.border.height;
 
-      this.autofill.cover = {
-        xLeft: this.border.x,
-        xRight: this.border.x + this.border.width,
-        yStart: yStart,
-        yEnd:
-          yStart +
-          Math.round(yEnd / this.border.height) * (this.border.height + 1),
-      };
+      const yEnd = yStart + Math.round(cellLengthY) * (this.border.height + 1);
+
+      if (yEnd > yStart || yEnd < yStart) {
+        this.autofill.cover = {
+          xLeft: this.border.x,
+          xRight: this.border.x + this.border.width,
+          yStart: yStart,
+          yEnd: yEnd,
+          axis: "y",
+        };
+      } else {
+        const xRight = this.border.x + this.border.width;
+        const cellLengthX =
+          (this.mouseControls.pos.x - xRight) / this.border.width;
+        const xEnd = xRight + Math.round(cellLengthX) * (this.border.width + 1);
+
+        this.autofill.cover = {
+          xLeft: xRight,
+          xRight: xEnd,
+          yStart: this.border.y,
+          yEnd: this.border.y + this.border.height,
+          axis: "x",
+        };
+      }
     }
 
     if (!this.autofill.dragStart) {
-      const lastIndex =
+      const lastXIndex =
+        (this.autofill.cover.xRight - this.autofill.cover.xLeft) /
+        this.border.width;
+
+      const lastYIndex =
         (this.autofill.cover.yEnd - this.autofill.cover.yStart) /
         this.border.height;
 
       this.viewportCells
         .filter((cell) => {
-          return (
-            cell.colIndex === this.border.colIndex &&
-            cell.rowIndex > this.border.rowIndex &&
-            cell.rowIndex < this.border.rowIndex + lastIndex
-          );
+          {
+            if (this.autofill.cover.axis === "y") {
+              return (
+                cell.colIndex === this.border.colIndex &&
+                cell.rowIndex > this.border.rowIndex &&
+                cell.rowIndex < this.border.rowIndex + lastYIndex
+              );
+            } else {
+              return (
+                cell.rowIndex === this.border.rowIndex &&
+                cell.colIndex > this.border.colIndex &&
+                cell.colIndex < this.border.colIndex + lastXIndex
+              );
+            }
+          }
         })
         .forEach((cell) => {
           cell.text = this.input.element.value;
@@ -292,8 +323,8 @@ export class Grid {
 
       if (this.autofill.cover.xLeft && this.autofill.cover.yEnd) {
         this.autofill.changePosition(
-          this.autofill.cover.xRight - 3,
-          this.autofill.cover.yEnd - 3
+          this.autofill.cover.xRight - this.autofill.element.clientWidth / 2,
+          this.autofill.cover.yEnd - this.autofill.element.clientWidth / 2
         );
       }
 

@@ -42,6 +42,7 @@ export class Autofill {
     this._cover.xRight = state.xRight;
     this._cover.yStart = state.yStart;
     this._cover.yEnd = state.yEnd;
+    this._cover.axis = state.axis;
   }
 
   changePosition(x, y) {
@@ -50,48 +51,93 @@ export class Autofill {
   }
 
   drawStart() {
-    this.layer.context.beginPath();
-    this.layer.context.moveTo(this.cover.xLeft, this.cover.yStart);
-    this.layer.context.lineTo(this.cover.xLeft, this.cover.yEnd);
-    this.layer.context.strokeStyle = "black";
-    this.layer.context.setLineDash([4, 6]);
-    this.layer.context.stroke();
+    if (this._cover.axis === "y") {
+      this.drawCoverAxisY(true, "black");
+    }
 
-    this.layer.context.beginPath();
-    this.layer.context.moveTo(this.cover.xRight, this.cover.yStart);
-    this.layer.context.lineTo(this.cover.xRight, this.cover.yEnd);
-    this.layer.context.strokeStyle = "black";
-    this.layer.context.setLineDash([4, 6]);
-    this.layer.context.stroke();
-
-    this.layer.context.beginPath();
-    this.layer.context.moveTo(this.cover.xLeft, this.cover.yEnd);
-    this.layer.context.lineTo(this.cover.xRight, this.cover.yEnd);
-    this.layer.context.strokeStyle = "black";
-    this.layer.context.setLineDash([4, 6]);
-    this.layer.context.stroke();
+    if (this._cover.axis === "x") {
+      this.drawCoverAxisX(true, "black");
+    }
   }
 
   drawEnd() {
-    this.layer.context.beginPath();
-    this.layer.context.moveTo(this.cover.xLeft, this.cover.yStart);
-    this.layer.context.lineTo(this.cover.xLeft, this.cover.yEnd);
-    this.layer.context.strokeStyle = "#2376E5";
-    this.layer.context.setLineDash([]);
-    this.layer.context.stroke();
+    if (this._cover.axis === "y") {
+      this.drawCoverAxisY(false, "#2376E5");
+    }
 
-    this.layer.context.beginPath();
-    this.layer.context.moveTo(this.cover.xRight, this.cover.yStart);
-    this.layer.context.lineTo(this.cover.xRight, this.cover.yEnd);
-    this.layer.context.strokeStyle = "#2376E5";
-    this.layer.context.setLineDash([]);
-    this.layer.context.stroke();
+    if (this._cover.axis === "x") {
+      this.drawCoverAxisX(false, "#2376E5");
+    }
+  }
 
+  drawCoverAxisY(dashed, color) {
+    this.drawLine(
+      this.cover.xLeft,
+      this.cover.yStart,
+      this.cover.xLeft,
+      this.cover.yEnd,
+      dashed,
+      color
+    );
+
+    this.drawLine(
+      this.cover.xRight,
+      this.cover.yStart,
+      this.cover.xRight,
+      this.cover.yEnd,
+      dashed,
+      color
+    );
+
+    this.drawLine(
+      this.cover.xLeft,
+      this.cover.yEnd,
+      this.cover.xRight,
+      this.cover.yEnd,
+      dashed,
+      color
+    );
+  }
+
+  drawCoverAxisX(dashed, color) {
+    this.drawLine(
+      this.cover.xLeft,
+      this.cover.yStart,
+      this.cover.xRight,
+      this.cover.yStart,
+      dashed,
+      color
+    );
+
+    this.drawLine(
+      this.cover.xLeft,
+      this.cover.yEnd,
+      this.cover.xRight,
+      this.cover.yEnd,
+      dashed,
+      color
+    );
+
+    this.drawLine(
+      this.cover.xRight,
+      this.cover.yStart,
+      this.cover.xRight,
+      this.cover.yEnd,
+      dashed,
+      color
+    );
+  }
+
+  drawLine(x1, y1, x2, y2, dashed, color) {
     this.layer.context.beginPath();
-    this.layer.context.moveTo(this.cover.xLeft, this.cover.yEnd);
-    this.layer.context.lineTo(this.cover.xRight, this.cover.yEnd);
-    this.layer.context.strokeStyle = "#2376E5";
-    this.layer.context.setLineDash([]);
+    this.layer.context.moveTo(x1, y1);
+    this.layer.context.lineTo(x2, y2);
+    this.layer.context.strokeStyle = color;
+    if (dashed) {
+      this.layer.context.setLineDash([4, 6]);
+    } else {
+      this.layer.context.setLineDash([]);
+    }
     this.layer.context.stroke();
   }
 
