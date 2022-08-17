@@ -174,7 +174,7 @@ export class Grid {
             rowIndex * cfg.cellHeight,
             cfg.cellWidth,
             cfg.cellHeight,
-            colIndex + "_" + rowIndex,
+            "",
             colIndex,
             rowIndex
           )
@@ -255,17 +255,51 @@ export class Grid {
   }
 
   update() {
-    const yStart = this.border.y + this.border.height;
-    const yEnd = this.mouseControls.pos.y - yStart;
+    if (this.autofill.dragStart) {
+      const yStart = this.border.y + this.border.height;
+      const yEnd = this.mouseControls.pos.y - yStart;
 
-    this.autofill.cover = {
-      xLeft: this.border.x,
-      xRight: this.border.x + this.border.width,
-      yStart: yStart,
-      yEnd:
-        yStart +
-        Math.round(yEnd / this.border.height) * (this.border.height + 1),
-    };
+      this.autofill.cover = {
+        xLeft: this.border.x,
+        xRight: this.border.x + this.border.width,
+        yStart: yStart,
+        yEnd:
+          yStart +
+          Math.round(yEnd / this.border.height) * (this.border.height + 1),
+      };
+    }
+
+    if (!this.autofill.dragStart) {
+      const lastIndex =
+        (this.autofill.cover.yEnd - this.autofill.cover.yStart) /
+        this.border.height;
+
+      this.renderableCells
+        .filter((cell) => {
+          return (
+            cell.colIndex === this.border.colIndex &&
+            cell.rowIndex > this.border.rowIndex &&
+            cell.rowIndex < this.border.rowIndex + lastIndex
+          );
+        })
+        .forEach((cell) => {
+          cell.text = this.input.element.value;
+        });
+
+      if (this.autofill.cover.xLeft && this.autofill.cover.yEnd) {
+        this.autofill.changePosition(
+          this.autofill.cover.xRight - 3,
+          this.autofill.cover.yEnd - 3
+        );
+      }
+
+      this.selection.setBounds(
+        this.autofill.cover.xLeft,
+        this.autofill.cover.yStart,
+        this.autofill.cover.xRight - this.autofill.cover.xLeft,
+        this.autofill.cover.yEnd - this.autofill.cover.yStart
+      );
+    }
   }
 
   draw() {
@@ -304,32 +338,10 @@ export class Grid {
 
     if (this.autofill.dragStart) {
       this.autofill.drawStart();
-    } else {
-      console.log(this.autofill.cover.yEnd);
+    }
+
+    if (!this.autofill.dragStart) {
       this.autofill.drawEnd();
-
-      const lastIndex =
-        (this.autofill.cover.yEnd - this.autofill.cover.yStart) /
-        this.border.height;
-
-      this.renderableCells
-        .filter((cell) => {
-          return (
-            cell.colIndex === this.border.colIndex &&
-            cell.rowIndex > this.border.rowIndex &&
-            cell.rowIndex < this.border.rowIndex + lastIndex
-          );
-        })
-        .forEach((cell) => {
-          cell.text = this.input.element.value;
-        });
-
-      this.selection.setBounds(
-        this.autofill.cover.xLeft,
-        this.autofill.cover.yStart,
-        this.autofill.cover.xRight - this.autofill.cover.xLeft,
-        this.autofill.cover.yEnd - this.autofill.cover.yStart
-      );
     }
 
     this.autofill.draw();

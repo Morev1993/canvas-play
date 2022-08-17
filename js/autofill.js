@@ -23,7 +23,8 @@ export class Autofill {
 
     this.dragStart = false;
 
-    this.element.addEventListener("mousedown", () => {
+    this.element.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
       this.dragStart = true;
     });
 

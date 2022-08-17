@@ -2,15 +2,6 @@ export class Selection {
   constructor(container) {
     this.container = container;
 
-    this.element = document.createElement("div");
-    this.element.style.height = `${0}px`;
-    this.element.style.width = `${0}px`;
-    this.element.style.left = `${-9999}px`;
-    this.element.style.top = `${-9999}px`;
-    this.element.classList.add("selection");
-
-    this.container.appendChild(this.element);
-
     this.bounds = {
       x: 0,
       y: 0,
