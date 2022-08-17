@@ -86,22 +86,8 @@ class App {
     new Loop(this.update.bind(this), this.draw.bind(this));
   }
 
-  update(correction) {
-    // if (
-    //   this.keyboardControls.keys.ArrowRight &&
-    //   this.border.colIndex < this.columns - 1
-    // ) {
-    //   this.border.x += this.border.width * correction * 8;
-    // }
-    // if (this.keyboardControls.keys.ArrowLeft) {
-    //   this.border.x -= this.border.width * correction;
-    // }
-    // if (this.keyboardControls.keys.ArrowDown) {
-    //   this.border.y += this.border.height * correction;
-    // }
-    // if (this.keyboardControls.keys.ArrowUp) {
-    //   this.border.y -= this.border.height * correction;
-    // }
+  update() {
+    this.grid.update();
   }
 
   draw() {

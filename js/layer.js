@@ -1,8 +1,9 @@
 export class Layer {
   constructor(container) {
-    this.canvas = document.createElement('canvas');
-    this.context = this.canvas.getContext('2d');
-    container.appendChild(this.canvas);
+    this.canvas = document.createElement("canvas");
+    this.context = this.canvas.getContext("2d");
+    this.container = container;
+    this.container.appendChild(this.canvas);
 
     this.fitToContainer = this.fitToContainer.bind(this);
     // addEventListener('resize', this.fitToContainer);
@@ -12,7 +13,7 @@ export class Layer {
   fitToContainer() {
     const dpr = window.devicePixelRatio;
 
-    const rect = this.canvas.getBoundingClientRect()
+    const rect = this.canvas.getBoundingClientRect();
 
     //   // Set the "actual" size of the canvas
     this.canvas.width = rect.width * dpr;
@@ -26,6 +27,5 @@ export class Layer {
 
     this.canvas.style.width = `${rect.width}px`;
     this.canvas.style.height = `${rect.height}px`;
-
   }
 }

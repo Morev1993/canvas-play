@@ -1,13 +1,14 @@
 export class Autofill {
-  constructor(width, height, container) {
+  constructor(x, y, width, height, layer) {
+    this.x = x;
+    this.y = y;
+
     this.element = document.createElement("div");
     this.element.style.height = `${width}px`;
     this.element.style.width = `${height}px`;
-    this.element.style.left = `${-9999}px`;
-    this.element.style.top = `${-9999}px`;
+    this.element.style.left = `${this.x}px`;
+    this.element.style.top = `${this.y}px`;
     this.element.classList.add("autofill");
-
-    this.pos = {};
 
     this._cover = {
       xLeft: 0,
@@ -16,7 +17,9 @@ export class Autofill {
       yEnd: 0,
     };
 
-    container.appendChild(this.element);
+    this.layer = layer;
+
+    this.layer.container.appendChild(this.element);
 
     this.dragStart = false;
 
@@ -41,9 +44,58 @@ export class Autofill {
   }
 
   changePosition(x, y) {
-    this.element.style.left = `${x}px`;
-    this.element.style.top = `${y}px`;
+    this.x = x;
+    this.y = y;
   }
 
-  draw() {}
+  drawStart() {
+    this.layer.context.beginPath();
+    this.layer.context.moveTo(this.cover.xLeft, this.cover.yStart);
+    this.layer.context.lineTo(this.cover.xLeft, this.cover.yEnd);
+    this.layer.context.strokeStyle = "black";
+    this.layer.context.setLineDash([4, 6]);
+    this.layer.context.stroke();
+
+    this.layer.context.beginPath();
+    this.layer.context.moveTo(this.cover.xRight, this.cover.yStart);
+    this.layer.context.lineTo(this.cover.xRight, this.cover.yEnd);
+    this.layer.context.strokeStyle = "black";
+    this.layer.context.setLineDash([4, 6]);
+    this.layer.context.stroke();
+
+    this.layer.context.beginPath();
+    this.layer.context.moveTo(this.cover.xLeft, this.cover.yEnd);
+    this.layer.context.lineTo(this.cover.xRight, this.cover.yEnd);
+    this.layer.context.strokeStyle = "black";
+    this.layer.context.setLineDash([4, 6]);
+    this.layer.context.stroke();
+  }
+
+  drawEnd() {
+    this.layer.context.beginPath();
+    this.layer.context.moveTo(this.cover.xLeft, this.cover.yStart);
+    this.layer.context.lineTo(this.cover.xLeft, this.cover.yEnd);
+    this.layer.context.strokeStyle = "#2376E5";
+    this.layer.context.setLineDash([]);
+    this.layer.context.stroke();
+
+    this.layer.context.beginPath();
+    this.layer.context.moveTo(this.cover.xRight, this.cover.yStart);
+    this.layer.context.lineTo(this.cover.xRight, this.cover.yEnd);
+    this.layer.context.strokeStyle = "#2376E5";
+    this.layer.context.setLineDash([]);
+    this.layer.context.stroke();
+
+    this.layer.context.beginPath();
+    this.layer.context.moveTo(this.cover.xLeft, this.cover.yEnd);
+    this.layer.context.lineTo(this.cover.xRight, this.cover.yEnd);
+    this.layer.context.strokeStyle = "#2376E5";
+    this.layer.context.setLineDash([]);
+    this.layer.context.stroke();
+  }
+
+  draw() {
+    this.element.style.left = `${this.x}px`;
+    this.element.style.top = `${this.y}px`;
+  }
 }
