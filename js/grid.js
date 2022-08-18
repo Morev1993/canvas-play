@@ -291,28 +291,36 @@ export class Grid {
     }
 
     if (!this.autofill.dragStart) {
-      const lastXIndex =
+      const lastXIndex = Math.ceil(
         (this.autofill.cover.xRight - this.autofill.cover.xLeft) /
-        this.border.width;
+          this.border.width
+      );
 
-      const lastYIndex =
+      const lastYIndex = Math.ceil(
         (this.autofill.cover.yEnd - this.autofill.cover.yStart) /
-        this.border.height;
+          this.border.height
+      );
 
       this.viewportCells
         .filter((cell) => {
           {
             if (this.autofill.cover.axis === "y") {
               return (
-                cell.colIndex === this.border.colIndex &&
-                cell.rowIndex > this.border.rowIndex &&
-                cell.rowIndex < this.border.rowIndex + lastYIndex
+                (cell.colIndex === this.border.colIndex &&
+                  cell.rowIndex > this.border.rowIndex &&
+                  cell.rowIndex < this.border.rowIndex + lastYIndex) ||
+                (cell.colIndex === this.border.colIndex &&
+                  cell.rowIndex < this.border.rowIndex &&
+                  cell.rowIndex > this.border.rowIndex + lastYIndex)
               );
             } else {
               return (
-                cell.rowIndex === this.border.rowIndex &&
-                cell.colIndex > this.border.colIndex &&
-                cell.colIndex < this.border.colIndex + lastXIndex
+                (cell.rowIndex === this.border.rowIndex &&
+                  cell.colIndex > this.border.colIndex &&
+                  cell.colIndex < this.border.colIndex + lastXIndex) ||
+                (cell.rowIndex === this.border.rowIndex &&
+                  cell.colIndex < this.border.colIndex &&
+                  cell.colIndex > this.border.colIndex + lastXIndex)
               );
             }
           }
@@ -329,8 +337,12 @@ export class Grid {
       }
 
       this.selection.setBounds(
-        this.autofill.cover.xLeft,
-        this.autofill.cover.yStart,
+        this.autofill.cover.xRight > this.autofill.cover.xLeft
+          ? this.autofill.cover.xLeft
+          : this.autofill.cover.xRight,
+        this.autofill.cover.yEnd > this.autofill.cover.yStart
+          ? this.autofill.cover.yStart
+          : this.autofill.cover.yEnd,
         this.autofill.cover.xRight - this.autofill.cover.xLeft,
         this.autofill.cover.yEnd - this.autofill.cover.yStart
       );
