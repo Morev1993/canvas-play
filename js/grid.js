@@ -29,8 +29,8 @@ export class Grid {
     this.viewportCells = this.getViewportCells();
 
     this.autofill = new Autofill(
-      this.border.x + this.border.width - 4,
-      this.border.y + this.border.height - 4,
+      this.border.x + this.border.width,
+      this.border.y + this.border.height,
       8,
       8,
       this.layer
@@ -220,8 +220,8 @@ export class Grid {
     this.autofill.cover = {};
 
     this.autofill.changePosition(
-      this.border.x + this.border.width - this.autofill.element.clientWidth / 2,
-      this.border.y + this.border.height - this.autofill.element.clientWidth / 2
+      this.border.x + this.border.width,
+      this.border.y + this.border.height
     );
 
     const target = this.viewportCells.find(
@@ -323,8 +323,8 @@ export class Grid {
 
       if (this.autofill.cover.xLeft && this.autofill.cover.yEnd) {
         this.autofill.changePosition(
-          this.autofill.cover.xRight - this.autofill.element.clientWidth / 2,
-          this.autofill.cover.yEnd - this.autofill.element.clientWidth / 2
+          this.autofill.cover.xRight,
+          this.autofill.cover.yEnd
         );
       }
 

@@ -1,7 +1,7 @@
 export class Autofill {
   constructor(x, y, width, height, layer) {
-    this.x = x;
-    this.y = y;
+    this.x = x - 3;
+    this.y = y - 3;
 
     this.element = document.createElement("div");
     this.element.style.height = `${width}px`;
@@ -46,8 +46,8 @@ export class Autofill {
   }
 
   changePosition(x, y) {
-    this.x = x;
-    this.y = y;
+    this.x = x - 3;
+    this.y = y - 3;
   }
 
   drawStart() {
@@ -71,68 +71,45 @@ export class Autofill {
   }
 
   drawCoverAxisY(dashed, color) {
-    this.drawLine(
-      this.cover.xLeft,
-      this.cover.yStart,
-      this.cover.xLeft,
-      this.cover.yEnd,
-      dashed,
-      color
-    );
-
-    this.drawLine(
-      this.cover.xRight,
-      this.cover.yStart,
-      this.cover.xRight,
-      this.cover.yEnd,
-      dashed,
-      color
-    );
-
-    this.drawLine(
-      this.cover.xLeft,
-      this.cover.yEnd,
-      this.cover.xRight,
-      this.cover.yEnd,
+    const { xLeft, yStart, yEnd, xRight } = this.cover;
+    this.drawPath(
+      xLeft,
+      yStart,
+      xLeft,
+      yEnd,
+      xRight,
+      yEnd,
+      xRight,
+      yStart,
       dashed,
       color
     );
   }
 
   drawCoverAxisX(dashed, color) {
-    this.drawLine(
-      this.cover.xLeft,
-      this.cover.yStart,
-      this.cover.xRight,
-      this.cover.yStart,
-      dashed,
-      color
-    );
-
-    this.drawLine(
-      this.cover.xLeft,
-      this.cover.yEnd,
-      this.cover.xRight,
-      this.cover.yEnd,
-      dashed,
-      color
-    );
-
-    this.drawLine(
-      this.cover.xRight,
-      this.cover.yStart,
-      this.cover.xRight,
-      this.cover.yEnd,
+    const { xLeft, yStart, yEnd, xRight } = this.cover;
+    this.drawPath(
+      xLeft,
+      yStart,
+      xRight,
+      yStart,
+      xRight,
+      yEnd,
+      xLeft,
+      yEnd,
       dashed,
       color
     );
   }
 
-  drawLine(x1, y1, x2, y2, dashed, color) {
+  drawPath(x0, y0, x1, y1, x2, y2, x3, y3, dashed, color) {
     this.layer.context.beginPath();
-    this.layer.context.moveTo(x1, y1);
+    this.layer.context.moveTo(x0, y0);
+    this.layer.context.lineTo(x1, y1);
     this.layer.context.lineTo(x2, y2);
+    this.layer.context.lineTo(x3, y3);
     this.layer.context.strokeStyle = color;
+
     if (dashed) {
       this.layer.context.setLineDash([4, 6]);
     } else {
