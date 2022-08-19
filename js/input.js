@@ -20,5 +20,10 @@ export class Input {
     this.element.style.left = `${x - 1}px`;
     this.element.style.top = `${y - 1}px`;
     this.element.value = text;
+
+    setTimeout(() => {
+      this.element.focus();
+    })
+
   }
 }
