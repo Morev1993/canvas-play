@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/Morev1993/canvas-play/issues"
   },
-  "homepage": "https://github.com/Morev1993/canvas-play#readme"
+  "homepage": "https://github.com/Morev1993/canvas-play#readme",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
 }
